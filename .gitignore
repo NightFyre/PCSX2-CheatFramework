@@ -2,18 +2,11 @@
 .vs/
 bin/
 debug/
+release/
+x86/
 x64/
-
-# exclude external libraries
-FrameWork/
-minhook/
-imgui/
-*Roboto-Bold.h
-*xorstr.hpp
-*initialize.hpp
 
 # exclude personal settings
 *.sln
-*.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
