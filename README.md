@@ -13,10 +13,6 @@
 | ![image](https://user-images.githubusercontent.com/80198020/200977503-e4737e4e-9d2d-4b2e-9554-3b8484872e38.png) | ![image](https://user-images.githubusercontent.com/80198020/201475737-21591eb0-8858-4575-8ee9-5d9d2e07d1dc.png) | ![image](https://user-images.githubusercontent.com/80198020/200977619-e22fe7a5-b914-4906-9e3c-50f929ea3ebf.png) |  
 | :---: | :---: |  :---: |
 
-<p align="center">
-<img src="https://user-images.githubusercontent.com/80198020/201538016-90c10da3-5fc4-4b17-bcd7-2d070556b524.png">
-</p>
-
 ## References & Credits
 - [Accessing PCSX2 Memory](https://nightfyre.github.io/PCSX2_Trainer/)
 - [Dear ImGui](https://github.com/ocornut/imgui)
