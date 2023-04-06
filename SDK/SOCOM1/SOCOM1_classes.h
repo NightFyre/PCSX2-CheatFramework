@@ -129,7 +129,7 @@ namespace PlayStation2
 			int							NamePTR;			//0x0014
 			char						pad_0018[4];		//0x0018
 			Vector3						Position;			//0x001C
-			class CPlayerPhysics* CPlayerMovement;	//0x0028
+			class CPlayerPhysics*		CPlayerMovement;	//0x0028
 			char						pad_0030[148];		//0x0030
 			int							TeamID;				//0x00C4
 			char						pad_00C8[1348];		//0x00C8

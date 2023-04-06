@@ -5,7 +5,6 @@ debug/
 release/
 x86/
 x64/
-*.bak
 
 # exclude personal settings
 *.sln
