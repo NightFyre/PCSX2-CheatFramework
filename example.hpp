@@ -15,10 +15,10 @@ DWORD WINAPI Client()
     {
         // Obtain an instance of local player
         auto _managed_pointer = new SOCOM::Offsets();
-        auto _localPlayer = reinterpret_cast<SOCOM::CPlayer*>(_managed_pointer->SEALPointer);
+        auto _localPlayer = reinterpret_cast<SOCOM::CZSealBody*>(_managed_pointer->SEALPointer);
         delete _managed_pointer;
         
-        auto _managed_pointer_2 = new SOCOM::MatchData();
+        auto _managed_pointer_2 = new SOCOM::CZMatchData();
         if (!_managed_pointer_2->isMatchEnded())
         {
             // Get all entities in the match
@@ -85,12 +85,12 @@ void ClientInitialize(LPVOID hInstance)
 
 
     // Get Local Player Instance
-    auto _player = reinterpret_cast<SOCOM::CPlayer*>(socom_offsets->SEALPointer);
+    auto _player = reinterpret_cast<SOCOM::CZSealBody*>(socom_offsets->SEALPointer);
     if (_player != nullptr && _player->IsValid())
         printf("%s", _player->LogData().c_str());           //  Print information about local player character
 
     //  Get Match Data Instance
-    auto _match = new SOCOM::MatchData();
+    auto _match = new SOCOM::CZMatchData();
     
     //  Check if match is currently playing
     if (!_match->isMatchEnded())

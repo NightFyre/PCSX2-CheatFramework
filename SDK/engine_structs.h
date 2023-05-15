@@ -10,72 +10,88 @@
 #pragma pack(push, 0x01)
 namespace PlayStation2
 {
-    struct Vector2
-    {
-        float x, y;
+	struct Vector2
+	{
+		float x, y;
+		Vector2() : x(0), y(0) {}
+		Vector2(float x, float y) : x(x), y(y) {}
 
-		Vector2 operator+(const Vector2& other) const
-		{
-			return Vector2{ x + other.x, y + other.y };
-		}
 
-		Vector2 operator-(const Vector2& other) const
-		{
-			return Vector2{ x - other.x, y - other.y };
-		}
+		// Addition operator
+		Vector2 operator+(const Vector2& other) const { return Vector2(x + other.x, y + other.y); }
 
-		Vector2 operator*(float scalar) const
-		{
-			return Vector2{ x * scalar, y * scalar };
-		}
+		// Subtraction operator
+		Vector2 operator-(const Vector2& other) const { return Vector2(x - other.x, y - other.y); }
 
-		Vector2 operator/(float scalar) const
-		{
-			return Vector2{ x / scalar, y / scalar };
-		}
+		// Scalar multiplication operator
+		Vector2 operator*(float scalar) const { return Vector2(x * scalar, y * scalar); }
 
-		Vector2 operator=(float* other) const
-		{
-			return Vector2{ other[0], other[1] };
-		}
+		//	Scalar division operator
+		Vector2 operator/(float scalar) const { return Vector2{ x / scalar, y / scalar }; }
 
+		//	float* return operator
+		Vector2 operator=(float* other) const { return Vector2{ other[0], other[1] }; }
+
+		// Dot product operator
+		float operator*(const Vector2& other) const { return x * other.x + y * other.y; }
+
+		//	
 		Vector2& operator*=(const Vector2& other)
 		{
 			x += other.x;
 			y += other.y;
 			return *this;
 		}
-    };
 
-    struct Vector3
-    {
-        float x, y, z;
-
-		Vector3 operator+(const Vector3& other) const
-		{
-			return Vector3{ x + other.x, y + other.y, z + other.z };
+		// Scalar multiplication and assignment operator
+		Vector2 operator*=(float scalar) {
+			x *= scalar;
+			y *= scalar;
+			return *this;
 		}
 
-		Vector3 operator-(const Vector3& other) const
-		{
-			return Vector3{ x - other.x, y - other.y, z - other.z };
-		}
+		// Length (magnitude) of the vector
+		float length() const { return std::sqrt(x * x + y * y); }
 
-		Vector3 operator*(float scalar) const
+		// Normalize the vector
+		void normalize()
 		{
-			return Vector3{ x * scalar, y * scalar, z * scalar };
+			float len = length();
+			if (len > 0) {
+				x /= len;
+				y /= len;
+			}
 		}
+	};
 
-		Vector3 operator/(float scalar) const
-		{
-			return Vector3{ x / scalar, y / scalar, z / scalar };
-		}
+	struct Vector3
+	{
+		float x, y, z;
+		Vector3() : x(0), y(0), z(0) {}
+		Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
 
-		Vector3 operator=(float* other) const
-		{
-			return Vector3{ other[0], other[1], other[2] };
-		}
+		// Addition operator
+		Vector3 operator+(const Vector3& other) const { return Vector3{ x + other.x, y + other.y, z + other.z }; }
 
+		// Subtraction operator
+		Vector3 operator-(const Vector3& other) const { return Vector3{ x - other.x, y - other.y, z - other.z }; }
+
+		// Scalar multiplication operator
+		Vector3 operator*(float scalar) const { return Vector3{ x * scalar, y * scalar, z * scalar }; }
+
+		//	Scalar division operator
+		Vector3 operator/(float scalar) const { return Vector3{ x / scalar, y / scalar, z / scalar }; }
+
+		// Dot product operator
+		float operator*(const Vector3& other) const { return x * other.x + y * other.y + z * other.z; }
+
+		// Cross product operator
+		Vector3 operator^(const Vector3& other) const { return Vector3(y * other.z - z * other.y, z * other.x - x * other.z, x * other.y - y * other.x); }
+
+		//	
+		Vector3 operator=(float* other) const { return Vector3{ other[0], other[1], other[2] }; }
+
+		//	
 		Vector3& operator*=(const Vector3& other)
 		{
 			x += other.x;
@@ -83,37 +99,47 @@ namespace PlayStation2
 			z += other.z;
 			return *this;
 		}
-    };
 
-    struct Vector4
-    {
-        float x, y, z, w;
+		// Length (magnitude) of the vector
+		float length() const { return std::sqrt(x * x + y * y + z * z); }
 
-		Vector4 operator+(const Vector4& other) const
+		// Normalize the vector
+		void normalize()
 		{
-			return Vector4{ x + other.x, y + other.y, z + other.z , w + other.w};
+			float len = length();
+			if (len > 0) {
+				x /= len;
+				y /= len;
+				z /= len;
+			}
 		}
+	};
 
-		Vector4 operator-(const Vector4& other) const
-		{
-			return Vector4{ x - other.x, y - other.y, z - other.z , w - other.w };
-		}
+	struct Vector4
+	{
+		float x, y, z, w;
+		Vector4() : x(0), y(0), z(0), w(w) {}
+		Vector4(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
 
-		Vector4 operator*(float scalar) const
-		{
-			return Vector4{ x * scalar, y * scalar, z * scalar , w * scalar };
-		}
+		// Addition operator
+		Vector4 operator+(const Vector4& other) const { return Vector4(x + other.x, y + other.y, z + other.z, w + other.w); }
 
-		Vector4 operator/(float scalar) const
-		{
-			return Vector4{ x / scalar, y / scalar, z / scalar , w / scalar };
-		}
+		// Subtraction operator
+		Vector4 operator-(const Vector4& other) const { return Vector4(x - other.x, y - other.y, z - other.z, w - other.w); }
 
-		Vector4 operator=(float* other) const
-		{
-			return Vector4{ other[0], other[1], other[2] , other[3] };
-		}
+		// Scalar multiplication operator
+		Vector4 operator*(float scalar) const { return Vector4(x * scalar, y * scalar, z * scalar, w * scalar); }
 
+		// Scalar division operator
+		Vector4 operator/(float scalar) const { return Vector4{ x / scalar, y / scalar, z / scalar , w / scalar }; }
+
+		// Dot product operator
+		float operator*(const Vector4& other) const { return x * other.x + y * other.y + z * other.z + w * other.w; }
+
+		//	
+		Vector4 operator=(float* other) const { return Vector4{ other[0], other[1], other[2] , other[3] }; }
+
+		//	
 		Vector4& operator*=(const Vector4& other)
 		{
 			x += other.x;
@@ -122,7 +148,91 @@ namespace PlayStation2
 			w += other.w;
 			return *this;
 		}
-    };
+
+		// Length (magnitude) of the vector
+		float length() const { return std::sqrt(x * x + y * y + z * z + w * w); }
+
+		// Normalize the vector
+		void normalize()
+		{
+			float len = length();
+			if (len > 0) {
+				x /= len;
+				y /= len;
+				z /= len;
+				w /= len;
+			}
+		}
+	};
+
+	struct Matrix2x3
+	{
+		Vector2 TopRow, MiddleRow, BottomRow;
+
+		// Matrix addition operator
+		Matrix2x3 operator+(const Matrix2x3& other) const { return Matrix2x3{ TopRow + other.TopRow, MiddleRow + other.MiddleRow, BottomRow + other.BottomRow }; }
+
+		// Matrix subtraction operator
+		Matrix2x3 operator-(const Matrix2x3& other) const { return Matrix2x3{ TopRow - other.TopRow, MiddleRow - other.MiddleRow, BottomRow - other.BottomRow }; }
+
+		// Matrix-scalar multiplication operator
+		Matrix2x3 operator*(float scalar) const { return Matrix2x3{ TopRow * scalar, MiddleRow * scalar, BottomRow * scalar }; }
+
+		bool isZeroMatrix(const Matrix2x3& matrix) {
+			if (matrix.TopRow.x == 0 && matrix.TopRow.y == 0 &&
+				matrix.MiddleRow.x == 0 && matrix.MiddleRow.y == 0 &&
+				matrix.BottomRow.x == 0 && matrix.BottomRow.y == 0) {
+				return true;
+			}
+			return false;
+		}
+	};
+
+	struct Matrix3x3
+	{
+		Vector3 TopRow, MiddleRow, BottomRow;
+
+		// Matrix addition operator
+		Matrix3x3 operator+(const Matrix3x3& other) const { return Matrix3x3{ TopRow + other.TopRow, MiddleRow + other.MiddleRow, BottomRow + other.BottomRow }; }
+
+		// Matrix subtraction operator
+		Matrix3x3 operator-(const Matrix3x3& other) const { return Matrix3x3{ TopRow - other.TopRow, MiddleRow - other.MiddleRow, BottomRow - other.BottomRow }; }
+
+		// Matrix-scalar multiplication operator
+		Matrix3x3 operator*(float scalar) const { return Matrix3x3{ TopRow * scalar, MiddleRow * scalar, BottomRow * scalar }; }
+
+		bool isZeroMatrix(const Matrix3x3& matrix) {
+			if (matrix.TopRow.x == 0 && matrix.TopRow.y == 0 && matrix.TopRow.z == 0 &&
+				matrix.MiddleRow.x == 0 && matrix.MiddleRow.y == 0 && matrix.MiddleRow.z == 0 &&
+				matrix.BottomRow.x == 0 && matrix.BottomRow.y == 0 && matrix.BottomRow.z == 0) {
+				return true;
+			}
+			return false;
+		}
+	};
+
+	struct Matrix4x3
+	{
+		Vector4 TopRow, MiddleRow, BottomRow;
+
+		// Matrix addition operator
+		Matrix4x3 operator+(const Matrix4x3& other) const { return Matrix4x3{ TopRow + other.TopRow, MiddleRow + other.MiddleRow, BottomRow + other.BottomRow }; }
+
+		// Matrix subtraction operator
+		Matrix4x3 operator-(const Matrix4x3& other) const { return Matrix4x3{ TopRow - other.TopRow, MiddleRow - other.MiddleRow, BottomRow - other.BottomRow }; }
+
+		// Matrix-scalar multiplication operator
+		Matrix4x3 operator*(float scalar) const { return Matrix4x3{ TopRow * scalar, MiddleRow * scalar, BottomRow * scalar }; }
+
+		bool isZeroMatrix(const Matrix4x3& matrix) {
+			if (matrix.TopRow.x == 0 && matrix.TopRow.y == 0 && matrix.TopRow.z == 0 && matrix.TopRow.w == 0 &&
+				matrix.MiddleRow.x == 0 && matrix.MiddleRow.y == 0 && matrix.MiddleRow.z == 0 && matrix.MiddleRow.w == 0 &&
+				matrix.BottomRow.x == 0 && matrix.BottomRow.y == 0 && matrix.BottomRow.z == 0 && matrix.BottomRow.w == 0) {
+				return true;
+			}
+			return false;
+		}
+	};
 
 	struct ProcessInfo
 	{
@@ -178,7 +288,7 @@ namespace PlayStation2
 		}
 	};
 
-    struct EMU
+    struct PCSX2
     {
 
         uintptr_t hk_OnLeftDClick = NULL;

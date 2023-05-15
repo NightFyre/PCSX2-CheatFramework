@@ -12,6 +12,7 @@
 #include <cmath>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
 //	Include SDK Files
 #include "SDK/engine_package.h"

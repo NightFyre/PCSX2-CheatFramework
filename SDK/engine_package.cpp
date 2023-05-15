@@ -19,8 +19,8 @@ namespace PlayStation2
     bool InitSDK(const std::string& moduleName)
     {
         // Initialize Core Class
-        g_PS2 = std::make_unique<PS2>();                //  Get PS2 Global Instance
-        g_PS2Mem = std::make_unique<PS2Memory>();       //  Get Global PS2Memory Instance
+        g_PS2       = std::make_unique<PS2>();                  //  Get PS2 Global Instance
+        g_PS2Mem    = std::make_unique<PS2Memory>();            //  Get Global PS2Memory Instance
 
         // Resolve Signatures
         //	m_OnLeftDClick = Signature("48 8B 05 ? ? ? ? 80 B8 ? ? ? ? ? 74 0C").Scan().As<uint64_t>();

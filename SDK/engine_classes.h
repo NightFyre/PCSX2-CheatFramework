@@ -15,11 +15,15 @@ namespace PlayStation2
         // Class Initialize
         PS2()
         {
-            AllocConsole();															//  Allocate console for output
-            freopen_s(&output_stream, "CONOUT$", "w", stdout);	                    //  Establish stream for output to console
+            HWND g_chWnd = GetConsoleWindow();
+            if (g_chWnd == NULL)
+            {
+                AllocConsole();														//  Allocate console for output
+                freopen_s(&output_stream, "CONOUT$", "w", stdout);	                //  Establish stream for output to console
+                SetConsoleTitleA("PCSX2 FrameWork by NightFyre");					//  Set console title
+                g_chWnd = GetConsoleWindow();										//  Store WindowHandle to console
+            }
             g_cHandle = GetStdHandle(STD_OUTPUT_HANDLE);							//  Store handle to console
-            SetConsoleTitleA("PCSX2 FrameWork by NightFyre");						//  Set console title
-            g_chWnd = GetConsoleWindow();											//  Store WindowHandle to console
             ShowWindow(GetConsoleWindow(), SW_SHOW);								//	Show console window
             printf("[+] PCSX2-FrameWork::Initialized\n\n");         				//	Print text to our newly created window
         }
@@ -27,8 +31,10 @@ namespace PlayStation2
         //  Cleanup
         ~PS2()
         {
-            if (output_stream != NULL)
-                fclose(output_stream);
+            if (output_stream == NULL)
+                return;
+
+            fclose(output_stream);
             DestroyWindow(g_chWnd);
             FreeConsole();
         }
@@ -88,17 +94,17 @@ namespace PlayStation2
             //0x7FF6B048CF60 0000001E0000001E   //  8   Bytes
             //0x7FF6B048CF60 0000001E           //  4   Bytes
             // Reformat Value from designated address
-            *(int32_t*)Address = Patch;
+            *(T*)Address = Patch;
         }
 
 
     public:
         PS2Memory() 
         {
+            Process.Initialize();
             dwGameBase          = (uintptr_t)Process.m_ModuleBase;
             dwEEMem             = (uintptr_t)GetProcAddress((HMODULE)Process.m_ModuleHandle, "EEmem");
             BasePS2MemorySpace  = *(uintptr_t*)dwEEMem;
-            Process.Initialize();
         }
         ~PS2Memory() {}
     };

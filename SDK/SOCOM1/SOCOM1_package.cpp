@@ -44,7 +44,7 @@ namespace PlayStation2
 
 		///---------------------------------------------------------------------------------------------------
 		//	[OFFSETS]
-		std::string CCamera::LogData()
+		std::string CZCamera::LogData()
 		{
 			return "";
 		}
@@ -58,7 +58,7 @@ namespace PlayStation2
 
 		///---------------------------------------------------------------------------------------------------
 		//	[CWEAPON]
-		std::string CWeapon::LogData()
+		std::string CZWeapon::LogData()
 		{
 			return "";
 		}
@@ -72,7 +72,7 @@ namespace PlayStation2
 
 		///---------------------------------------------------------------------------------------------------
 		//	[CPLAYERPHYSICS]
-		std::string CPlayerPhysics::LogData()
+		std::string CZSealObject::LogData()
 		{
 			return "";
 		}
@@ -87,7 +87,7 @@ namespace PlayStation2
 		///---------------------------------------------------------------------------------------------------
 		//	[CPLAYER]
 		// Returns Class Pointer Status
-		bool CPlayer::IsValid()
+		bool CZSealBody::IsValid()
 		{
 			return ((unsigned int)this->pad_0000 == 0x000000 || this->NamePTR == NULL || this->CPlayerMovement == nullptr || this->TeamID == NULL) ? FALSE : TRUE;
 		}
@@ -95,7 +95,7 @@ namespace PlayStation2
 		///---------------------------------------------------------------------------------------------------
 		//	[CPLAYER]
 		// Returns Players Alive State
-		bool CPlayer::IsAlive()
+		bool CZSealBody::IsAlive()
 		{
 			return (this->Health > 0.0f) ? TRUE : FALSE;
 		}
@@ -103,7 +103,7 @@ namespace PlayStation2
 		///---------------------------------------------------------------------------------------------------
 		//	[CPLAYER]
 		// Returns a Pointer to CPlayerPhysics Class
-		CPlayerPhysics* CPlayer::PlayerPhysicsPtr()
+		CPlayerPhysics* CZSealBody::PlayerPhysicsPtr()
 		{
 			return (CPlayerPhysics*)((unsigned int)this->CPlayerMovement + g_PS2Mem->BasePS2MemorySpace);
 		}
@@ -111,7 +111,7 @@ namespace PlayStation2
 		///---------------------------------------------------------------------------------------------------
 		//	[CPLAYER]
 		// Returns Player Name
-		std::string CPlayer::GetPlayerName()
+		std::string CZSealBody::GetPlayerName()
 		{
 			return (char*)(NamePTR + g_PS2Mem->BasePS2MemorySpace);
 		}
@@ -119,7 +119,7 @@ namespace PlayStation2
 		///---------------------------------------------------------------------------------------------------
 		//	[CPLAYER]
 		// Returns Player Team Name
-		std::string CPlayer::GetTeamName()
+		std::string CZSealBody::GetTeamName()
 		{
 			switch (this->TeamID)
 			{
@@ -144,13 +144,13 @@ namespace PlayStation2
 		///---------------------------------------------------------------------------------------------------
 		//	[CPLAYER]
 		// Returns Weapon Name
-		std::string CPlayer::GetWeaponName(unsigned int Weapon)
+		std::string CZSealBody::GetWeaponName(unsigned int Weapon)
 		{
 			switch (Weapon)
 			{
-			case(Primary::AR_552): return "552";
-			case(Primary::SMG_9MM): return "9MM SUB";
-			case(Secondary::PISTOL_9MM): return "9MM PISTOL";
+				case(EPrimaryWeapon::AR_552):		return "552";
+				case(EPrimaryWeapon::SMG_9MM):		return "9MM SUB";
+				case(ESecondaryWeapon::PISTOL_9MM): return "9MM PISTOL";
 			}
 
 			char data[0x56];
@@ -161,7 +161,7 @@ namespace PlayStation2
 
 		///---------------------------------------------------------------------------------------------------
 		//	[CPLAYER]
-		void CPlayer::GiveAmmo(int amount, int mags)
+		void CZSealBody::GiveAmmo(int amount, int mags)
 		{
 			if (mags <= NULL || mags > 10)
 				mags = 3;
@@ -179,28 +179,28 @@ namespace PlayStation2
 		///---------------------------------------------------------------------------------------------------
 		//	[CPLAYER]
 		// Replaces current weapon in slot with input Weapon
-		void CPlayer::GiveWeapon(unsigned int Slot, unsigned int Weapon)
+		void CZSealBody::GiveWeapon(unsigned int Slot, unsigned int Weapon)
 		{
 			// Intended usage
 			switch (Slot)
 			{
-			case (WeaponSlot::Primary):		this->PrimaryWeapon = Weapon;	break;
-			case (WeaponSlot::Secondary):	this->SecondaryWeapon = Weapon;	break;
-			case (WeaponSlot::EqSlot1):		this->EqSlot1 = Weapon;	break;
-			case (WeaponSlot::EqSlot2):		this->EqSlot2 = Weapon;	break;
-			case (WeaponSlot::EqSlot3):		this->EqSlot3 = Weapon;	break;
+				case (EWeaponSlot::Primary):		this->PrimaryWeapon		= (EPrimaryWeapon)Weapon;	break;
+				case (EWeaponSlot::Secondary):		this->SecondaryWeapon	= (ESecondaryWeapon)Weapon;	break;
+				case (EWeaponSlot::EqSlot1):		this->EqSlot1			= (EEquipment)Weapon;	break;
+				case (EWeaponSlot::EqSlot2):		this->EqSlot2			= (EEquipment)Weapon;	break;
+				case (EWeaponSlot::EqSlot3):		this->EqSlot3			= (EEquipment)Weapon;	break;
 			}
 		}
 
 		///---------------------------------------------------------------------------------------------------
 		//	[CPLAYER]
-		void CPlayer::RemoveWeaponsandAmmo()
+		void CZSealBody::RemoveWeaponsandAmmo()
 		{
-			this->PrimaryWeapon = NULL;
-			this->SecondaryWeapon = NULL;
-			this->EqSlot1 = NULL;
-			this->EqSlot2 = NULL;
-			this->EqSlot3 = NULL;
+			this->PrimaryWeapon		= (EPrimaryWeapon)NULL;
+			this->SecondaryWeapon	= (ESecondaryWeapon)NULL;
+			this->EqSlot1			= (EEquipment)NULL;
+			this->EqSlot2			= (EEquipment)NULL;
+			this->EqSlot3			= (EEquipment)NULL;
 
 			for (int i = NULL; i < 10; i++)
 			{
@@ -215,22 +215,43 @@ namespace PlayStation2
 		///---------------------------------------------------------------------------------------------------
 		//	[CPLAYER]
 		// Teleports this entity to desired position
-		void CPlayer::Teleport(Vector3 Pos)
+		void CZSealBody::Teleport(Vector3 Pos)
 		{
 			unsigned int test = (unsigned int)this->CPlayerMovement;
 			auto offset = (test + g_PS2Mem->BasePS2MemorySpace);
-			auto Movement = (CPlayerPhysics*)offset;
+			auto Movement = (CZSealObject*)offset;
 			Movement->absPosition = Pos;
+		}
+
+
+		///---------------------------------------------------------------------------------------------------
+		//	[CPLAYER]
+		// Changes this entity to team to desired team
+		void CZSealBody::ChangeTeams(ETeam newTeam)
+		{
+			this->TeamID = newTeam;
+		}
+			
+		///---------------------------------------------------------------------------------------------------
+		//	[CPLAYER]
+		// Sets this entity health (value from 0 - 100)
+		void CZSealBody::SetHealth(float newHealth)
+		{
+			if (newHealth > 100.f )
+				newHealth = 100.0f;
+			else if (newHealth < 1.0f)
+				newHealth = 0.0f;
+			this->Health = newHealth / 100.f;
 		}
 
 		///---------------------------------------------------------------------------------------------------
 		//	[CPLAYER]
 		// generates a log containing important player data
 		// NOTE: Ends with 2New Line
-		std::string CPlayer::LogData()
+		std::string CZSealBody::LogData()
 		{
 			Offsets offsets;
-			auto SEAL = (CPlayer*)offsets.SEALPointer;
+			auto SEAL = (CZSealBody*)offsets.SEALPointer;
 			float distance;
 			if (SEAL != this)
 				distance = g_PS2Mem->Tools->GetDistanceTo3DObject(SEAL->Position, this->Position);	//	@todo: Tools might be a nullptr here
@@ -256,7 +277,7 @@ namespace PlayStation2
 
 		///---------------------------------------------------------------------------------------------------
 		//	[MATCHDATA]
-		bool MatchData::isMatchEnded()
+		bool CZMatchData::isMatchEnded()
 		{
 			Offsets offset;
 			return (g_PS2Mem->PS2Read<int>(offset.GameEndAddress) == NULL) ? TRUE : FALSE;
@@ -264,18 +285,18 @@ namespace PlayStation2
 
 		///---------------------------------------------------------------------------------------------------
 		//	[MATCHDATA]
-		void MatchData::ForceStartMatch()
+		void CZMatchData::ForceStartMatch()
 		{
 			//
 		}
 
 		///---------------------------------------------------------------------------------------------------
 		//	[MATCHDATA]
-		std::vector<CPlayer*> MatchData::GetPlayers()
+		std::vector<CZSealBody*> CZMatchData::GetPlayers()
 		{
 			int count = NULL;
 			Offsets offsets;
-			std::vector<CPlayer*> ents{};
+			std::vector<CZSealBody*> ents{};
 
 			//   Grab the first entityObjectPointer in the array
 			auto entArray = offsets.EntityArray;
@@ -288,7 +309,7 @@ namespace PlayStation2
 			for (int i = 0; i <= maxSize; i++)
 			{
 				//	Cast entity object to CPlayer Class
-				CPlayer* ent = (CPlayer*)((*(int32_t*)(entArray + 0x8)) + g_PS2Mem->BasePS2MemorySpace);
+				CZSealBody* ent = (CZSealBody*)((*(int32_t*)(entArray + 0x8)) + g_PS2Mem->BasePS2MemorySpace);
 				if (ent == NULL)
 					break;
 
@@ -315,7 +336,7 @@ namespace PlayStation2
 
 		///---------------------------------------------------------------------------------------------------
 		//	[MATCHDATA]
-		std::string MatchData::LogData()
+		std::string CZMatchData::LogData()
 		{
 			// Data
 			// - Player Count
