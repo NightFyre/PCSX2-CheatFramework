@@ -10,56 +10,170 @@
 #pragma pack(push, 0x01)
 namespace PlayStation2
 {
-
+    //  GLOBALS
     GSRenderer**        CGlobals::g_gs_renderer;
     GSDevice**          CGlobals::g_gs_device;
     EmuThread**         CGlobals::g_emu_thread;
+    Memory*             Engine::g_Mem;
+    Tools*              Engine::g_Tools;
+    PCSX2*              Engine::g_PCSX2;
+
     //----------------------------------------------------------------------------------------------------
     //										CORE
-    // 	   Created By NightFyre
-    // CORE
     //-----------------------------------------------------------------------------------
 
+    ///---------------------------------------------------------------------------------------------------
     bool InitSDK(const std::string& moduleName, unsigned int gRenderer, unsigned int gDevice, unsigned int gEmu)
     {
         auto m_modBase = reinterpret_cast<__int64>(GetModuleHandleA(moduleName.c_str()));
         if (!m_modBase)
             return FALSE;
 
+
+        g_Engine = std::make_unique<Engine>();                      // Initialize Core Class
+        Engine::g_Mem   = new Memory;                               // spawn class instances
+        Engine::g_Tools = new Tools;                                  
+        Engine::g_PCSX2 = new PCSX2;                                  
+        Engine::g_Mem->ObtainProcessInfo(Engine::g_Mem->Process);   //  Obtain process information
+
+        //  Initialize PCSX2 Classes
         CGlobals::g_gs_renderer = reinterpret_cast<GSRenderer**>(m_modBase + gRenderer);
         CGlobals::g_gs_device   = reinterpret_cast<GSDevice**>(m_modBase + gDevice);
         CGlobals::g_emu_thread  = reinterpret_cast<EmuThread**>(m_modBase + gEmu);
 
-        // Initialize Core Class
-        g_Engine = new Engine;
-
-        // Resolve Signatures
-        //	m_OnLeftDClick  = Signature("48 8B 05 ? ? ? ? 80 B8 ? ? ? ? ? 74 0C").Scan().As<uint64_t>();
-        //  m_ResetEE       = Signature("80 3D ? ? ? ? ? 74 13 B8 ? ? ? ? 86").Scan().As<uint64_t>();	// 80 3D 09 18 E8 0C 00 74 13 B8 01 00 00 00 86 05 DF 0B E8 0C C6 05 F6 17 E8 0C 01
-        //  g_gs_device     = 
-        //  g_gs_renderer   =   
-        //  g_emu_thread    =   
         return TRUE;
     }
 
+    ///---------------------------------------------------------------------------------------------------
+    // Template Initialization function
+    //  NOTE: offsets will not always be correct
     bool InitSDK() { return InitSDK("pcsx2-qt.exe", 0x40D4B98, 0x40D4AA0, 0xDD30BD8); }
 
+    ///---------------------------------------------------------------------------------------------------
+    //  
     void ShutdownSDK()
     {
-
+        // clear pointers   (effectively freeing the memory)
+        Engine::g_PCSX2         = nullptr;
+        Engine::g_Mem           = nullptr;
+        Engine::g_Tools         = nullptr;
+        CGlobals::g_gs_renderer = nullptr;     
+        CGlobals::g_gs_device   = nullptr;  
+        CGlobals::g_emu_thread  = nullptr;  
+        
+        //  cleanup console if not handled by the user
+        if (g_Engine->isConsolePresent())
+            g_Engine->DestroyConsole();
     }
+
+    ///---------------------------------------------------------------------------------------------------
+	unsigned int GetVtblOffset(void* czInstance, const char* dwModule)
+	{
+		uintptr_t moduleBase = (uintptr_t)GetModuleHandleA(NULL);
+		return ((*(unsigned int*)czInstance) - moduleBase);
+	}
+
+    ///---------------------------------------------------------------------------------------------------
+	int GetVtblIndex(void* fncPtr, void* vTblAddr) { return (((__int64)fncPtr - (__int64)vTblAddr) / sizeof(void*)) - 1; }
+
+    //----------------------------------------------------------------------------------------------------
+    //										ENGINE
+    //-----------------------------------------------------------------------------------
+
+    ///---------------------------------------------------------------------------------------------------
+    void Engine::CreateConsole(const char* title, bool bShow)
+    {
+        AllocConsole();														//  Allocate console for output
+        p_bShowWindow = bShow;                                              //  set visible flag
+        p_wndw_handle = GetConsoleWindow();									//  Store WindowHandle to console
+        p_console_handle = GetStdHandle(STD_OUTPUT_HANDLE);					//  Store handle to console
+        freopen_s(&p_fin_stream, "CONIN$", "r", stdout);	                //  Establish input stream
+        freopen_s(&p_fout_stream, "CONOUT$", "w", stdout);	                //  Establish ouput stream
+        freopen_s(&p_ferr_stream, "CONOUT$", "w", stdout);	                //  Establish error stream
+        SetConsoleTitleA(title);					                        //  Set console title
+        ShowWindow(p_wndw_handle, p_bShowWindow ? SW_SHOW : SW_HIDE);		//	Show console window based on visible state
+        p_bConsole = TRUE;
+    }   
+
+    ///---------------------------------------------------------------------------------------------------
+    void Engine::DestroyConsole()
+    {
+        if (!p_bConsole || !p_fout_stream)
+            return;
+
+        p_bConsole      = false;                                            //
+        p_bShowWindow   = false;                                            //
+        fclose(p_fout_stream);                                              //  
+        fclose(p_fin_stream);                                               //  
+        fclose(p_ferr_stream);                                              //  
+        DestroyWindow(p_wndw_handle);                                       //  
+        FreeConsole();                                                      //  
+    }
+
+    ///---------------------------------------------------------------------------------------------------
+    bool Engine::isConsolePresent() { return this->p_bConsole; }
 
     //----------------------------------------------------------------------------------------------------
 	//										MEMORY
-	// 	   Created By NightFyre
-	// - Memory
 	//-----------------------------------------------------------------------------------
+
+    Memory::Memory()
+    {
+        if (ObtainProcessInfo(Process))
+        {
+            dwGameBase          = (uintptr_t)Process.m_ModuleBase;
+            dwEEMem             = (uintptr_t)GetProcAddress((HMODULE)Process.m_ModuleHandle, "EEmem");
+            BasePS2MemorySpace  = *(uintptr_t*)dwEEMem;
+        }
+    }
 
     ///---------------------------------------------------------------------------------------------------
     //	[MEMORY]
-    bool PS2Memory::isNullPtr()
+    //  
+    bool Memory::ObtainProcessInfo(ProcessInfo& pInfo)
     {
-        return (this == nullptr) ? TRUE : FALSE;
+        // Get initial process info
+        pInfo.m_ModulePID       = GetCurrentProcessId();
+        pInfo.m_ModuleHandle    = GetModuleHandle(NULL);
+        pInfo.m_ModuleBase      = (uintptr_t)GetModuleHandle(NULL);
+
+        // Get the path of the module
+        char szModulePath[MAX_PATH];
+        if (!GetModuleFileNameA((HMODULE)pInfo.m_ModuleHandle, szModulePath, MAX_PATH))
+        {
+            CloseHandle(pInfo.m_ModuleHandle);
+            return FALSE;
+        }
+
+        // Get the main window of the current process
+        HWND hWnd = GetForegroundWindow();
+        if (!hWnd)
+        {
+            CloseHandle(pInfo.m_ModuleHandle);
+            return FALSE;
+        }
+
+        // Get the window title and class name of the main window
+        char szWindowTitle[MAX_PATH];
+        char szClassName[MAX_PATH];
+        GetWindowTextA(hWnd, szWindowTitle, MAX_PATH);
+        GetClassNameA(hWnd, szClassName, MAX_PATH);
+
+        // Get the size of the main window
+        RECT rect;
+        GetWindowRect(hWnd, &rect);
+        int nWidth = rect.right - rect.left;
+        int nHeight = rect.bottom - rect.top;
+
+        // Set the fields of the ProcessInfo struct
+        pInfo.m_GameWindow      = hWnd;
+        pInfo.m_WindowTitle     = szWindowTitle;
+        pInfo.m_ClassName       = szClassName;
+        pInfo.m_ModulePath      = szModulePath;
+        pInfo.m_WindowWidth     = nWidth;
+        pInfo.m_WindowHeight    = nHeight;
+        pInfo.m_WindowSize      = Vector2((float)nWidth, (float)nHeight);
+        return TRUE;
     }
 
     ///---------------------------------------------------------------------------------------------------
@@ -70,10 +184,7 @@ namespace PlayStation2
     // - Shortened RAW : 0x48D548
     // - Base Memory   : 7FF660000000
     // - Result        : 7FF660000000 + 0x48D548 = 7FF66048D548
-    uintptr_t PS2Memory::GetAddr(unsigned int RAW_PS2_OFFSET)
-    {
-        return (BasePS2MemorySpace + RAW_PS2_OFFSET);
-    }
+    uintptr_t Memory::GetPS2Address(unsigned int RAW_PS2_OFFSET) { return (BasePS2MemorySpace + RAW_PS2_OFFSET); }
 
     ///---------------------------------------------------------------------------------------------------
     //	[MEMORY]
@@ -82,19 +193,16 @@ namespace PlayStation2
     // Note: Must be a base address
     // - CPlayer
     // - CCamera
-    uintptr_t PS2Memory::GetClassPtr(unsigned int RAW_PS2_OFFSET)
-    {
-        return *(int32_t*)(RAW_PS2_OFFSET + BasePS2MemorySpace) + BasePS2MemorySpace;
-    }
+    uintptr_t Memory::DereferencePtr(unsigned int RAW_PS2_OFFSET) { return *(int32_t*)(RAW_PS2_OFFSET + BasePS2MemorySpace) + BasePS2MemorySpace; }
 
     ///---------------------------------------------------------------------------------------------------
     //	[MEMORY]
     // Resolves Pointer Chain from input Shorthand RAW PS2 Format Address
     // <returns></returns>
-    uintptr_t PS2Memory::ResolvePtrChain(unsigned int RAW_PS2_OFFSET, std::vector<unsigned int> offsets)
+    uintptr_t Memory::ResolvePtrChain(unsigned int RAW_PS2_OFFSET, std::vector<unsigned int> offsets)
     {
         //  --
-        uintptr_t addr = (*(int32_t*)GetAddr(RAW_PS2_OFFSET)) + BasePS2MemorySpace;
+        uintptr_t addr = (*(int32_t*)GetPS2Address(RAW_PS2_OFFSET)) + BasePS2MemorySpace;
         if (offsets.empty())
             return addr;
 
@@ -113,7 +221,7 @@ namespace PlayStation2
     // Write Assembly patches to desired location
     // <returns>TRUE if operation is a success, otherwise result is FALSE</returns>
     // Note: resolve any offsets prior to running this function.
-    bool PS2Memory::BytePatch(uintptr_t Address, BYTE* bytes, unsigned int size)
+    bool Memory::BytePatch(uintptr_t Address, BYTE* bytes, unsigned int size)
     {
         DWORD oldprotect;
         auto status = VirtualProtect(reinterpret_cast<void*>(Address), size, PAGE_EXECUTE_READWRITE, &oldprotect);
@@ -129,7 +237,7 @@ namespace PlayStation2
     //	[MEMORY]
     // Write NOP opcodes for desired size at the set destination
     // <returns>TRUE if operation is a success, otherwise result is FALSE</returns>
-    bool PS2Memory::Nop(uintptr_t Address, unsigned int size)
+    bool Memory::NopBytes(uintptr_t Address, unsigned int size)
     {
         DWORD oldprotect;
         auto status = VirtualProtect(reinterpret_cast<void*>(Address), size, PAGE_EXECUTE_READWRITE, &oldprotect);
@@ -144,15 +252,13 @@ namespace PlayStation2
 
     //----------------------------------------------------------------------------------------------------
 	//										TOOLS
-	// 	   Created By NightFyre
-	// - Tools
 	//-----------------------------------------------------------------------------------
 
     ///---------------------------------------------------------------------------------------------------
     //	[TOOL]
     //	Gets distance from Position A to Position B
     // <returns>Vector3</returns>
-    float PS2Tools::GetDistanceTo3DObject(Vector3 POS, Vector3 POS2)
+    float Tools::GetDistanceTo3DObject(Vector3 POS, Vector3 POS2)
     {
         float x = (POS2.x - POS.x);
         float y = (POS2.y - POS.y);

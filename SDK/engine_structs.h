@@ -10,6 +10,7 @@
 #pragma pack(push, 0x01)
 namespace PlayStation2
 {
+
 	struct Vector2
 	{
 		float x, y;
@@ -247,74 +248,7 @@ namespace PlayStation2
 		int			m_WindowWidth;
 		int			m_WindowHeight;
 		Vector2		m_WindowSize{};
-
-		void Initialize()
-		{
-			// Get initial process info
-			m_ModulePID		= GetCurrentProcessId();
-			m_ModuleHandle	= GetModuleHandle(NULL);
-			m_ModuleBase	= (uintptr_t)GetModuleHandle(NULL);
-
-			// Get the path of the module
-			char szModulePath[MAX_PATH];
-			if (GetModuleFileNameA((HMODULE)m_ModuleHandle, szModulePath, MAX_PATH) == 0)
-				CloseHandle(m_ModuleHandle);
-
-			// Get the main window of the current process
-			HWND hWnd = GetForegroundWindow();
-			if (hWnd == NULL)
-				CloseHandle(m_ModuleHandle);
-
-			// Get the window title and class name of the main window
-			char szWindowTitle[MAX_PATH];
-			char szClassName[MAX_PATH];
-			GetWindowTextA(hWnd, szWindowTitle, MAX_PATH);
-			GetClassNameA(hWnd, szClassName, MAX_PATH);
-
-			// Get the size of the main window
-			RECT rect;
-			GetWindowRect(hWnd, &rect);
-			int nWidth = rect.right - rect.left;
-			int nHeight = rect.bottom - rect.top;
-
-			// Set the fields of the ProcessInfo struct
-			m_GameWindow	= hWnd;
-			m_WindowTitle	= szWindowTitle;
-			m_ClassName		= szClassName;
-			m_ModulePath	= szModulePath;
-			m_WindowWidth	= nWidth;
-			m_WindowHeight	= nHeight;
-			m_WindowSize	= Vector2((float)nWidth, (float)nHeight);
-		}
 	};
 
-    struct PCSX2
-    {
-
-        uintptr_t hk_OnLeftDClick = NULL;
-        uintptr_t hk_ResetEE = NULL;
-
-        void __cdecl recResetEE(uintptr_t Address)
-        {
-            typedef void(__cdecl* pFunctionAddress)();
-            pFunctionAddress pResetEE = (pFunctionAddress)((Address));
-            pResetEE();
-        }
-
-
-
-
-
-
-    };
-
-	enum RenderAPI
-	{
-		None	= 0,
-		D3D11	= 1,
-		D3D12	= 2,
-		OpenGL	= 4,
-		Vulkan	= 3
-	};
 }
 #pragma pack(pop)
