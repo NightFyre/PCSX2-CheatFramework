@@ -301,6 +301,20 @@ namespace PlayStation2
             pResetEE();
         }
 
+
+
+
+
+
     };
+
+	enum RenderAPI
+	{
+		None	= 0,
+		D3D11	= 1,
+		D3D12	= 2,
+		OpenGL	= 4,
+		Vulkan	= 3
+	};
 }
 #pragma pack(pop)

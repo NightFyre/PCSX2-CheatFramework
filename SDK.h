@@ -14,8 +14,14 @@
 #include <sstream>
 #include <algorithm>
 
+
+//	RENDERING APIS
+#include <d3d11.h>
+
 //	Include SDK Files
 #include "SDK/engine_package.h"
 
-// Custom Game Includes
-#include "SDK/SOCOM1/SOCOM1_package.h"
+
+// Custom Game Packages 
+//	#include "SDK/SOCOM1/SOCOM1_package.h"
+//	#include "SDK/SlyCooper1/SlyCooper_Package.h"

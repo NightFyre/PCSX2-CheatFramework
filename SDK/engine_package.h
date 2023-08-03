@@ -16,7 +16,7 @@ namespace PlayStation2
 	// --------------------------------------------------
 	// # Global functions
 	// --------------------------------------------------
-	bool InitSDK(const std::string& moduleName);
+	bool InitSDK(const std::string& moduleName, unsigned int gRenderer, unsigned int gDevice, unsigned int gEmu);
 	bool InitSDK();
 	void ShutdownSDK();
 }

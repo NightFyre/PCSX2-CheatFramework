@@ -6,6 +6,10 @@ release/
 x86/
 x64/
 
+# exclude external libraries
+*.rcnet
+
+
 # exclude personal settings
 *.sln
 *.vcxproj.filters

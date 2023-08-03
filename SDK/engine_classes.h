@@ -9,6 +9,15 @@
 #pragma pack(push, 0x01)
 namespace PlayStation2
 {
+    class Engine
+    {
+    public:
+        static class PS2*           g_PS2;
+        static class PS2Memory*     g_Mem;
+        static class PS2Tools*      g_Tools;
+    };
+    inline Engine* g_Engine;
+
     class PS2
     {	
     public:
@@ -45,12 +54,10 @@ namespace PlayStation2
 	    HWND			    g_chWnd{};			                                    //  Window Handle to Console
 	    HANDLE			    _pipe;				                                    //	Handle to Pipe
     };
-    inline std::unique_ptr<PS2> g_PS2;
 
     class PS2Memory
     {
     public:
-        class PS2Tools*                     Tools;                                  //  
         ProcessInfo                         Process;                                //  Process Information Struct
         uintptr_t                           dwGameBase;                             //  Process Module Base
         uintptr_t                           dwEEMem;                                //  EEMem Pointer
@@ -108,12 +115,139 @@ namespace PlayStation2
         }
         ~PS2Memory() {}
     };
-    inline std::unique_ptr<PS2Memory> g_PS2Mem;
 
     class PS2Tools
     {
     public:
         float GetDistanceTo3DObject(Vector3 POS, Vector3 POS2);
     };
+    
+
+    class CGlobals
+    {
+    public:
+
+        /*
+            __int64 GSUpdateDisplayWindow() -> g_gs_renderer
+            .text:000000014015095F                 mov     rcx, cs:g_gs_renderer
+            AOB: 48 8B 0D 32 42 F8 03
+        */
+        static class GSRenderer**   g_gs_renderer;
+
+        /*
+            __int64 GSUpdateDisplayWindow() -> g_gs_device
+            .text:00000001401508C5                 mov     rax, cs:g_gs_device
+            AOB: 48 8B 05 D4 41 F8 03
+        */
+        static class GSDevice**     g_gs_device;
+
+        /*
+            __int64 __fastcall OpenGSDevice(char a1, unsigned int a2) -> g_emu_thread
+            .text:000000014035C32F                 mov     rcx, cs:g_emu_thread
+            AOB: 48 8B 0D A2 48 9D 0D
+        */
+        static class EmuThread**    g_emu_thread;
+    
+    };
+
+    class GSRenderer
+    {
+    };
+
+    class GSRendererHW
+    {
+    };
+
+    class GSDevice
+    {
+
+    };
+
+    /*
+        GSDevice11 : DirectX11 Rendering API
+        - 0x0 = vfTable
+    */
+    class GSDevice11 : public GSDevice
+    {
+        char                            pad_0008[56];	        //0x0000
+        unsigned int                    m_window_info;	        //0x0040
+        char                            pad_0044[12];	        //0x0044
+        HWND                            wndw_hwnd;	            //0x0050
+        char                            pad_0058[32];	        //0x0058
+        class GSTexture11*              m_texture;	            //0x0078
+        char                            pad_0080[80];	        //0x0080
+        class IDXGIFactory*             m_dxgi_factory;	        //0x00D0	
+        class ID3D11Device*             m_dev;	                //0x00D8
+        class ID3D11DeviceContext*      m_ctx;                  //0x00E0
+        char                            pad_00E8[8];	        //0x00E8
+        class IDXGISwapChain*           m_swap_chain;	        //0x00F0	
+        class ID3D11RenderTargetView*   m_swap_chain_rtv;	    //0x00F0	
+        char                            pad_00F8[60];	        //0x00F8
+        bool                            N00000BBA;	            //0x0134
+        bool                            RequestedExclusiveFullscreenMode;	//0x0135
+        bool                            N00000BBF;	            //0x0136
+        bool                            m_is_exclusive_fullscreen;	//0x0137
+
+    private:
+        virtual void                    vf_CreateSurface();
+        virtual void                    vf_Function1();
+        virtual void                    vf_Function2();
+        virtual void                    vf_DoFXAA();
+        virtual void                    vf_Function4();
+        virtual void                    vf_Function5();
+        virtual void                    vf_Function6();
+        virtual void                    vf_Create();
+        virtual void                    vf_Function8();
+        virtual void                    vf_Function9();
+        virtual void                    vf_Function10();
+        virtual void                    vf_Function11();
+        virtual void                    vf_UpdateWindow();
+        virtual void                    vf_ResizeWindow();
+        virtual void                    vf_Function14();
+        virtual void                    vf_Function15();
+        virtual void                    vf_Function16();
+        virtual void                    vf_Function17();
+        virtual void                    vf_GetHostRefreshRate();
+        virtual void                    vf_GetDriverInfo();
+        virtual void                    vf_Function20();
+        virtual void                    vf_Function21();
+        virtual void                    vf_Function22();
+        virtual void                    vf_Function23();
+        virtual void                    vf_Function24();
+        virtual void                    vf_Function25();
+        virtual void                    vf_Function26();
+        virtual void                    vf_Function27();
+        virtual void                    vf_Function28();
+        virtual void                    vf_Function29();
+        virtual void                    vf_Function30();
+        virtual void                    vf_Function31();
+        virtual void                    vf_Function32();
+        virtual void                    vf_RenderHW();
+        virtual void                    vf_Function34();
+    };  //Size: 0x0138
+
+    class GSDevice12 : public GSDevice
+    {
+        char                        pad_0008[56];	        //0x0000
+        __int64                     m_window_info;	        //0x0040
+        char                        pad_0048[8];	        //0x0048
+        __int64                     window_hwnd;	        //0x0050
+        char                        pad_0058[1264];	        //0x0058
+        class IDXGIFactory*         m_dxgi_factory;	        //0x0548
+        class IDXGISwapChain*       m_swap_chain;	        //0x0550
+        char                        pad_0558[40];	        //0x0558
+    };	//Size: 0x055C
+
+
+    class GSDeviceOGL : public GSDevice
+    {
+
+    };
+
+    class GSDeviceVK : public GSDevice
+    {
+
+    };
+
 }
 #pragma pack(pop)

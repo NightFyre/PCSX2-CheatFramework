@@ -103,9 +103,9 @@ namespace PlayStation2
 		///---------------------------------------------------------------------------------------------------
 		//	[CPLAYER]
 		// Returns a Pointer to CPlayerPhysics Class
-		CPlayerPhysics* CZSealBody::PlayerPhysicsPtr()
+		CZSealObject* CZSealBody::PlayerPhysicsPtr()
 		{
-			return (CPlayerPhysics*)((unsigned int)this->CPlayerMovement + g_PS2Mem->BasePS2MemorySpace);
+			return (CZSealObject*)((unsigned int)this->CPlayerMovement + g_PS2Mem->BasePS2MemorySpace);
 		}
 
 		///---------------------------------------------------------------------------------------------------
