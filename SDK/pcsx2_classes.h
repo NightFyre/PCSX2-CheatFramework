@@ -43,6 +43,7 @@ namespace PlayStation2
         GSDevice11 : DirectX11 Rendering API
         - 0x0 = vfTable
     */
+
     class GSDevice11 : public GSDevice
     {
     private:

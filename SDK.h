@@ -16,6 +16,8 @@
 
 //	RENDERING APIS
 #include <d3d11.h>
+#include <d3d12.h>
+#include <dxgi1_4.h>
 
 //	Include SDK Files
 #include "SDK/engine_package.h"	//	Core PS2 Helper Classes, Structs & Functions
