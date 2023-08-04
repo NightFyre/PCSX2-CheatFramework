@@ -1,5 +1,42 @@
 # PCSX2 Menu Trainer Development Kit  
+| ![image](https://github.com/NightFyre/PCSX2-CheatFrameWork/assets/80198020/7417d7e7-603c-465a-807f-62abf88179eb) | ![image](https://user-images.githubusercontent.com/80198020/201475737-21591eb0-8858-4575-8ee9-5d9d2e07d1dc.png) | ![image](https://user-images.githubusercontent.com/80198020/200977619-e22fe7a5-b914-4906-9e3c-50f929ea3ebf.png) | 
+| :---: | :---: |  :---: |
+
+## References & Credits
+- [Accessing PCSX2 Memory](https://nightfyre.github.io/PCSX2_Trainer/)
+- [Dear ImGui](https://github.com/ocornut/imgui)
+- [Minhook Hooking Library](https://github.com/TsudaKageyu/minhook)
+- [Sly Cooper Modding Community](https://discord.com/invite/2GSXcEzPJA) 
+- [SOCOM Modding Community](https://discord.com/invite/PCJGrwMdUS) 
+
 ## CODE EXAMPLES
+```cpp
+//  Write Memory
+//  -   Example Pnach: Infinite Health by Codejunkies ( Star Wars Battlefront )
+//  -   patch=1,EE,20519060,extended,00000001
+
+// Extract offset from raw address
+unsigned int offset = 0x519060;
+
+//  Get Physical Address
+auto addr = PlayStation2::Engine::g_Mem->GetPS2Address(offset);
+
+//  Write Memory
+PlayStation2::Engine::g_Mem->PS2Write<int>(addr, 1);
+```
+
+```cpp
+// Read Memory
+//  -   Example Offset: Tidus Health - FFX
+//  -   0x10DF34C
+
+//  Get Offset Physical Address
+auto addr = PlayStation2::Engine::g_Mem->GetPS2Address(0x10DF34C);
+
+//  Read Memory
+auto result = PlayStation2::Engine::g_Mem->PS2Read<int>(addr);
+```
+
 ```cpp
 /// PCSX2 -> Hook DirectX11 Present
 PlayStation2::GSDevice* device = *PlayStation2::CGlobals::g_gs_device;
@@ -20,6 +57,7 @@ if (pSwapChain)
 }
 ```
 
+## ADVANCED TECHNIQUES
 ```cpp
 /// SOCOM 1 -> Access SealObject & Modify Weapon Ammo
 {
@@ -30,13 +68,3 @@ if (pSwapChain)
         base.PrimaryMag1 = 1337;    // Set Ammo Count in MAG1
 }
 ```
-
-| ![image](https://github.com/NightFyre/PCSX2-CheatFrameWork/assets/80198020/7417d7e7-603c-465a-807f-62abf88179eb) | ![image](https://user-images.githubusercontent.com/80198020/201475737-21591eb0-8858-4575-8ee9-5d9d2e07d1dc.png) | ![image](https://user-images.githubusercontent.com/80198020/200977619-e22fe7a5-b914-4906-9e3c-50f929ea3ebf.png) | 
-| :---: | :---: |  :---: |
-
-## References & Credits
-- [Accessing PCSX2 Memory](https://nightfyre.github.io/PCSX2_Trainer/)
-- [Dear ImGui](https://github.com/ocornut/imgui)
-- [Minhook Hooking Library](https://github.com/TsudaKageyu/minhook)
-- [Sly Cooper Modding Community](https://discord.com/invite/2GSXcEzPJA) 
-- [SOCOM Modding Community](https://discord.com/invite/PCJGrwMdUS) 

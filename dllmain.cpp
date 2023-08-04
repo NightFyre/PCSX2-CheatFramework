@@ -3,32 +3,6 @@
 using namespace std::chrono_literals;
 static bool         g_Running = FALSE;
 
-#define D3D11 0
-
-#if D3D11
-//  Hooking Template for accessibility
-typedef HRESULT(APIENTRY* IDXGISwapChainPresent)(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags);
-static IDXGISwapChainPresent oIDXGISwapChainPresent = NULL;
-static IDXGISwapChain* pSwapChain = nullptr;
-HRESULT __stdcall hkPresent(IDXGISwapChain* pSwapChain, UINT sync, UINT flags)
-{
-    printf("[+] Hello from SwapChain Present!\n");
-    return oIDXGISwapChainPresent(pSwapChain, sync, flags);
-}
-#endif
-
-//---------------------------------------------------------------------------------------------------
-// Main Cheat Thread
-void MainThread(bool& ref)
-{
-    do
-    {
-        if (GetAsyncKeyState(VK_END) & 1)
-            ref ^= 1;
-
-    } while (ref);
-}
-
 //---------------------------------------------------------------------------------------------------
 //  Initialize Client
 DWORD WINAPI Client(LPVOID hInstance)
@@ -53,31 +27,15 @@ DWORD WINAPI Client(LPVOID hInstance)
             emu_thread
         );
 
-#if D3D11
-        PlayStation2::GSDevice11* d3d11 = reinterpret_cast<PlayStation2::GSDevice11*>(device);
-        pSwapChain = d3d11->GetSwapChain();
-        if (pSwapChain)
-        {
-            DXGI_SWAP_CHAIN_DESC desc;
-            pSwapChain->GetDesc(&desc);
-            printf("[+] PCSX2::GSDevice11::SwapChainDescription -> Obtained!\nWindowHandle: 0x%llX\n\n", desc.OutputWindow);
-
-            //  Hook Present
-            PlayStation2::hkVFunction(pSwapChain, 8, oIDXGISwapChainPresent, hkPresent);
-            printf("[+] PCSX2::GSDevice11::Present -> Hooked!\nOriginal: 0x%llX\nDetour: 0x%llX\n\n",
-                oIDXGISwapChainPresent, hkPresent
-            );
-        }
-#endif         
-
         //  Render Loop
-        MainThread(g_Running);   //  <-- exectutes until g_Running = FALSE
+        do
+        {
+            if (GetAsyncKeyState(VK_END) & 1)
+                g_Running ^= 1;   //  Exit
 
-#if D3D11
-        if (pSwapChain)
-            PlayStation2::hkRestoreVFunction(pSwapChain, 8, oIDXGISwapChainPresent);
-#endif
-
+        } while (g_Running);
+        
+        //  cleanup
         PlayStation2::g_Engine->DestroyConsole();
         PlayStation2::ShutdownSDK();
     }

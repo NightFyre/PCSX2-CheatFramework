@@ -50,7 +50,6 @@ namespace PlayStation2
     bool InitSDK() { return InitSDK("pcsx2-qt.exe", 0x40D4B98, 0x40D4AA0, 0xDD30BD8); }
 
     ///---------------------------------------------------------------------------------------------------
-    //  
     void ShutdownSDK()
     {
         // clear pointers   (effectively freeing the memory)
@@ -113,10 +112,49 @@ namespace PlayStation2
     ///---------------------------------------------------------------------------------------------------
     bool Engine::isConsolePresent() { return this->p_bConsole; }
 
+    ///---------------------------------------------------------------------------------------------------
+    //  D3D Template Hook
+    void Engine::D3D11HookPresent()
+    {
+        //  Get Device Context
+        auto device = *CGlobals::g_gs_device;
+        if (!device)
+            return;
+
+        // Get GS Device
+        auto d3d11 = reinterpret_cast<GSDevice11*>(device);
+        if (!d3d11)
+            return;
+
+        this->m_pSwapChain = d3d11->GetSwapChain();
+        if (!this->m_pSwapChain)
+            return;
+
+        // Hook
+        hkVFunction(this->m_pSwapChain, 8, this->fnc_oIDXGISwapChainPresent, this->hkPresent);
+    }
+    void Engine::D3D11UnHookPresent()
+    {
+        if (!this->m_pSwapChain)
+            return;
+
+        hkRestoreVFunction(this->m_pSwapChain, 8, this->fnc_oIDXGISwapChainPresent);
+        this->m_pSwapChain = nullptr;
+        this->fnc_oIDXGISwapChainPresent = NULL;
+    }
+    HRESULT APIENTRY Engine::hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
+    {
+        //  Additional logic goes here
+
+        // detour exit
+        return g_Engine->fnc_oIDXGISwapChainPresent(pSwapChain, SyncInterval, Flags);
+    }
+
     //----------------------------------------------------------------------------------------------------
 	//										MEMORY
 	//-----------------------------------------------------------------------------------
 
+    //  Constructors
     Memory::Memory()
     {
         if (ObtainProcessInfo(Process))
@@ -126,6 +164,7 @@ namespace PlayStation2
             BasePS2MemorySpace  = *(uintptr_t*)dwEEMem;
         }
     }
+    Memory::~Memory() {}
 
     ///---------------------------------------------------------------------------------------------------
     //	[MEMORY]

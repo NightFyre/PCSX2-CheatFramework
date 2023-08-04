@@ -20,8 +20,15 @@ namespace PlayStation2
         void                            CreateConsole(const char* title, bool bShow = true); //  creates a console instance for debug output
         void                            DestroyConsole();                               //  destroys the created console instance
         bool                            isConsolePresent();                             //  
+        void                            D3D11HookPresent();                             //
+        void                            D3D11UnHookPresent();                           //
 
-        
+        // D3D Present Hook Template
+        typedef HRESULT(APIENTRY* IDXGISwapChainPresent)(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags);
+        IDXGISwapChainPresent           fnc_oIDXGISwapChainPresent = NULL;
+        IDXGISwapChain*                 m_pSwapChain = nullptr;
+        static HRESULT __stdcall        hkPresent(IDXGISwapChain* pSwapChain, UINT sync, UINT flags);
+
     private:
 	    FILE*			                p_fin_stream;		                            //  Console Text Input Stream
 	    FILE*			                p_fout_stream;		                            //  Console Text Output Stream
