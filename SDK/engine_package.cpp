@@ -10,13 +10,14 @@
 #pragma pack(push, 0x01)
 namespace PlayStation2
 {
-    //  GLOBALS
+
+    // --------------------------------------------------
+    // # Forwards
+    // --------------------------------------------------
+
     GSRenderer**        CGlobals::g_gs_renderer;
     GSDevice**          CGlobals::g_gs_device;
     EmuThread**         CGlobals::g_emu_thread;
-    Memory*             Engine::g_Mem;
-    Tools*              Engine::g_Tools;
-    PCSX2*              Engine::g_PCSX2;
 
     //----------------------------------------------------------------------------------------------------
     //										CORE
@@ -29,12 +30,8 @@ namespace PlayStation2
         if (!m_modBase)
             return FALSE;
 
-
         g_Engine = std::make_unique<Engine>();                      // Initialize Core Class
-        Engine::g_Mem   = new Memory;                               // spawn class instances
-        Engine::g_Tools = new Tools;                                  
-        Engine::g_PCSX2 = new PCSX2;                                  
-        Engine::g_Mem->ObtainProcessInfo(Engine::g_Mem->Process);   //  Obtain process information
+        Memory::Memory();                                           //  Init Memory 
 
         //  Initialize PCSX2 Classes
         CGlobals::g_gs_renderer = reinterpret_cast<GSRenderer**>(m_modBase + gRenderer);
@@ -53,9 +50,6 @@ namespace PlayStation2
     void ShutdownSDK()
     {
         // clear pointers   (effectively freeing the memory)
-        Engine::g_PCSX2         = nullptr;
-        Engine::g_Mem           = nullptr;
-        Engine::g_Tools         = nullptr;
         CGlobals::g_gs_renderer = nullptr;     
         CGlobals::g_gs_device   = nullptr;  
         CGlobals::g_emu_thread  = nullptr;  
@@ -159,9 +153,9 @@ namespace PlayStation2
     {
         if (ObtainProcessInfo(Process))
         {
-            dwGameBase          = (uintptr_t)Process.m_ModuleBase;
-            dwEEMem             = (uintptr_t)GetProcAddress((HMODULE)Process.m_ModuleHandle, "EEmem");
-            BasePS2MemorySpace  = *(uintptr_t*)dwEEMem;
+            Memory::dwGameBase          = (uintptr_t)Process.m_ModuleBase;
+            Memory::dwEEMem             = (uintptr_t)GetProcAddress((HMODULE)Process.m_ModuleHandle, "EEmem");
+            Memory::BasePS2MemorySpace  = *(uintptr_t*)dwEEMem;
         }
     }
     Memory::~Memory() {}
@@ -223,7 +217,7 @@ namespace PlayStation2
     // - Shortened RAW : 0x48D548
     // - Base Memory   : 7FF660000000
     // - Result        : 7FF660000000 + 0x48D548 = 7FF66048D548
-    uintptr_t Memory::GetPS2Address(unsigned int RAW_PS2_OFFSET) { return (BasePS2MemorySpace + RAW_PS2_OFFSET); }
+    uintptr_t Memory::GetPS2Address(unsigned int RAW_PS2_OFFSET) { return (Memory::BasePS2MemorySpace + RAW_PS2_OFFSET); }
 
     ///---------------------------------------------------------------------------------------------------
     //	[MEMORY]
@@ -232,7 +226,7 @@ namespace PlayStation2
     // Note: Must be a base address
     // - CPlayer
     // - CCamera
-    uintptr_t Memory::DereferencePtr(unsigned int RAW_PS2_OFFSET) { return *(int32_t*)(RAW_PS2_OFFSET + BasePS2MemorySpace) + BasePS2MemorySpace; }
+    uintptr_t Memory::DereferencePtr(unsigned int RAW_PS2_OFFSET) { return *(int32_t*)(RAW_PS2_OFFSET + Memory::BasePS2MemorySpace) + Memory::BasePS2MemorySpace; }
 
     ///---------------------------------------------------------------------------------------------------
     //	[MEMORY]

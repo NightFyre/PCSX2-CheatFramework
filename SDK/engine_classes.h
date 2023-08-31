@@ -11,12 +11,7 @@ namespace PlayStation2
 {
     class Engine
     {
-    public:
-        static class PCSX2*             g_PCSX2;                                        //  global accessor for PCSX2 member classes , members & methods
-        static class Memory*            g_Mem;                                          //  memory helpers
-        static class Tools*             g_Tools;                                        //  all other helpers
-
-    public:
+    public: //  INSTANCE METHODS
         void                            CreateConsole(const char* title, bool bShow = true); //  creates a console instance for debug output
         void                            DestroyConsole();                               //  destroys the created console instance
         bool                            isConsolePresent();                             //  
@@ -43,25 +38,27 @@ namespace PlayStation2
 
     class Memory
     {
-    public:
-        ProcessInfo                     Process;                                        //  Process Information Struct
+    public: //  MEMBERS
+        static uintptr_t                dwGameBase;                                     //  Process Module Base
+        static uintptr_t                dwEEMem;                                        //  EEMem Pointer
+        static uintptr_t                BasePS2MemorySpace;                             //  EEMem Base Address
+        static ProcessInfo              Process;                                        //  Process Information Struct
+    
+    public: //  METHODS
+        static bool                     ObtainProcessInfo(ProcessInfo& pInfo);
+        static uintptr_t                GetPS2Address(unsigned int RAW_PS2_OFFSET);
+        static uintptr_t                DereferencePtr(unsigned int RAW_PS2_OFFSET);
+        static uintptr_t                ResolvePtrChain(unsigned int RAW_PS2_OFFSET, std::vector<unsigned int> offsets = {});
+        static bool                     BytePatch(uintptr_t Address, BYTE* bytes, unsigned int size);
+        static bool                     NopBytes(uintptr_t Address, unsigned int size);
 
-    public:
-        bool                            ObtainProcessInfo(ProcessInfo& pInfo);
-        uintptr_t                       GetPS2Address(unsigned int RAW_PS2_OFFSET);
-        uintptr_t                       DereferencePtr(unsigned int RAW_PS2_OFFSET);
-        uintptr_t                       ResolvePtrChain(unsigned int RAW_PS2_OFFSET, std::vector<unsigned int> offsets = {});
-        bool                            BytePatch(uintptr_t Address, BYTE* bytes, unsigned int size);
-        bool                            NopBytes(uintptr_t Address, unsigned int size);
-        Memory();
-        ~Memory();
-        
         ///---------------------------------------------------------------------------------------------------
         //	[MEMORY]
         // Takes Full Address
         // Make sure to resolve any offsets prior to running this function
         // NOTE: only reads last 4bytes
-        template<typename T> inline T PS2Read(uintptr_t Address)
+        template<typename T> 
+        static inline T PS2Read(uintptr_t Address)
         {
             /// USING FRAMERATE AS AN EXAMPLE
             //0x7FF6B048CF60 0000001E0000001E   //  8   Bytes
@@ -79,7 +76,8 @@ namespace PlayStation2
         // Takes Full Address
         // Make sure to resolve any offsets prior to running this function
         // NOTE: only writes last 4bytes
-        template<typename T> inline void PS2Write(uintptr_t Address, T Patch)
+        template<typename T> 
+        static inline void PS2Write(uintptr_t Address, T Patch)
         {
             /// USING FRAMERATE AS AN EXAMPLE
             //0x7FF6B048CF60 0000001E0000001E   //  8   Bytes
@@ -88,17 +86,20 @@ namespace PlayStation2
             *(T*)Address = Patch;
         }
 
-
-    private:
-        uintptr_t                       dwGameBase;                             //  Process Module Base
-        uintptr_t                       dwEEMem;                                //  EEMem Pointer
-        uintptr_t                       BasePS2MemorySpace;                     //  EEMem Base Address
+    public:
+        Memory();
+        ~Memory();
     };
+    inline uintptr_t    Memory::dwGameBase{ 0 };
+    inline uintptr_t    Memory::dwEEMem{ 0 };
+    inline uintptr_t    Memory::BasePS2MemorySpace{ 0 };
+    inline ProcessInfo  Memory::Process{ 0 };
+
 
     class Tools
     {
     public:
-        float GetDistanceTo3DObject(Vector3 POS, Vector3 POS2);
+        static float GetDistanceTo3DObject(Vector3 POS, Vector3 POS2);
     };
    
     class CGlobals

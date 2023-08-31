@@ -20,11 +20,12 @@ DWORD WINAPI Client(LPVOID hInstance)
         auto renderer       = *PlayStation2::CGlobals::g_gs_renderer;           //  obtains Hardware renderer instance  
         auto emu_thread     = *PlayStation2::CGlobals::g_emu_thread;            //  obtains main emu thread instance
         
-        printf("[+] PCSX2 Framework Client Initialized!\n- device\t-> 0x%llX\n- renderer\t-> 0x%llX\n- thread\t-> 0x%llX\n"
+        printf("[+] PCSX2 Framework Client Initialized!\n- device\t-> 0x%llX\n- renderer\t-> 0x%llX\n- thread\t-> 0x%llX\n- PS2Base\t-> 0x%llX\n"
             ". . . PRESS [END] TO EXIT . . .\n\n",
             device,
             renderer,
-            emu_thread
+            emu_thread,
+            PlayStation2::Memory::BasePS2MemorySpace
         );
 
         //  Render Loop
@@ -37,8 +38,6 @@ DWORD WINAPI Client(LPVOID hInstance)
         } while (g_Running);
         
         //  cleanup
-        if (PlayStation2::g_Engine->isConsolePresent())     //  check if console is present ( this will be included in SDK initialization later on )
-            PlayStation2::g_Engine->DestroyConsole();       //  Destroy console instance ( otherwise it would linger and all references to it would be lost without manually obtaining the instance )
         PlayStation2::ShutdownSDK();                        //  Shutdown the sdk
     }
 

@@ -10,10 +10,6 @@
 namespace PlayStation2
 {
 	// --------------------------------------------------
-	// # Forwards
-	// --------------------------------------------------
-
-	// --------------------------------------------------
 	// # Global functions
 	// --------------------------------------------------
 	bool InitSDK(const std::string& moduleName, unsigned int gRenderer, unsigned int gDevice, unsigned int gEmu);

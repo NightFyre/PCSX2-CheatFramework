@@ -31,7 +31,7 @@ This framework provides tools to port older codes to a more modern approach, usi
 unsigned int offset = 0x4865E0;
 
 //  Get Physical Address
-auto addr = PlayStation2::Engine::g_Mem->GetPS2Address(offset);
+auto addr = PlayStation2::Memory::GetPS2Address(offset);
 ```
 
 - Read Memory
@@ -41,10 +41,10 @@ auto addr = PlayStation2::Engine::g_Mem->GetPS2Address(offset);
 //  -   0x10DF34C
 
 //  Get Offset Physical Address
-auto addr = PlayStation2::Engine::g_Mem->GetPS2Address(0x10DF34C);
+auto addr = PlayStation2::Memory::GetPS2Address(0x10DF34C);
 
 //  Read Memory
-auto result = PlayStation2::Engine::g_Mem->PS2Read<int>(addr);
+auto result = PlayStation2::Memory::PS2Read<int>(addr);
 ```
 
 - Write Memory
@@ -56,10 +56,10 @@ auto result = PlayStation2::Engine::g_Mem->PS2Read<int>(addr);
 //  - Patch         -> 00000001
 
 //  Get Physical Address
-auto addr = PlayStation2::Engine::g_Mem->GetPS2Address(0x519060);
+auto addr = PlayStation2::Memory::GetPS2Address(0x519060);
 
 //  Write Memory
-PlayStation2::Engine::g_Mem->PS2Write<int>(addr, 1);
+PlayStation2::Memory::PS2Write<int>(addr, 1);
 ```
 
 ## ADVANCED TECHNIQUES
@@ -90,8 +90,7 @@ if (pSwapChain)
 - [GameHacking.org](https://gamehacking.org/system/ps2)
 - [Sly Cooper Modding Community](https://discord.com/invite/2GSXcEzPJA) 
 - [SOCOM Modding Community](https://discord.com/invite/PCJGrwMdUS) 
-- [Dear ImGui](https://github.com/ocornut/imgui)
-- [Minhook Hooking Library](https://github.com/TsudaKageyu/minhook)
+- [A General Guide for Making Cheats & Trainers for PCSX2](https://www.unknowncheats.me/forum/general-programming-and-reversing/569991-pcsx2-guide-cheats-trainers.html)
 
 ## License
 This framework is distributed under the MIT License.
