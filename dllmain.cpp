@@ -1,7 +1,5 @@
 #pragma once
 #include "pch.h"
-using namespace std::chrono_literals;
-static bool         g_Running = FALSE;
 
 //---------------------------------------------------------------------------------------------------
 //  Initialize Client
@@ -14,24 +12,17 @@ DWORD WINAPI Client(LPVOID hInstance)
 
 #endif    
 
-    g_Running = PlayStation2::InitSDK();                                                //  Initialize PS2 Mini SDK
-    
-    if (g_Running)                                                                      //  Check the state of initialization
+    if (PlayStation2::InitSDK())
     {
-        auto device         = *PlayStation2::CGlobals::g_gs_device;                     //  Obtains the current render api device instance [@TODO: create method of obtaining current api class instance (GSDevice11)]
-        
-        auto renderer       = *PlayStation2::CGlobals::g_gs_renderer;                   //  obtains Hardware renderer instance  
-    
-        auto emu_thread     = *PlayStation2::CGlobals::g_emu_thread;                    //  obtains main emu thread instance
 
         //  Render Loop
         do
         {
             //  Exit Key
             if (GetAsyncKeyState(VK_END) & 1)
-                g_Running ^= 1;   //  flips the bit
+                g_running ^= 1;   //  flips the bit
 
-        } while (g_Running);
+        } while (g_running);
         
         //  cleanup
         PlayStation2::ShutdownSDK();                        //  Shutdown the sdk

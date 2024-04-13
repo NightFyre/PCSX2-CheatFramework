@@ -15,57 +15,57 @@ namespace PlayStation2
     // # Forwards
     // --------------------------------------------------
 
-    GSRenderer**        CGlobals::g_gs_renderer;
-    GSDevice**          CGlobals::g_gs_device;
-    EmuThread**         CGlobals::g_emu_thread;
+    /// PCSX2 Classes
+    GSRenderer*          CGlobals::g_gs_renderer;
+    GSDevice*            CGlobals::g_gs_device;
+    EmuThread*           CGlobals::g_emu_thread;
+    
+    ///  SDK Helpers
+    Console*             CGlobals::g_console;
+    Engine*              CGlobals::g_engine;
+    Memory*              CGlobals::g_memory;
 
     //----------------------------------------------------------------------------------------------------
     //										CORE
     //-----------------------------------------------------------------------------------
 
     ///---------------------------------------------------------------------------------------------------
-    bool InitSDK(const std::string& moduleName, unsigned int gRenderer, unsigned int gDevice, unsigned int gEmu)
+    bool InitSDK(const std::string& moduleName, unsigned int gDevice)
     {
         bool result{ false };
 
-        auto m_modBase = reinterpret_cast<__int64>(GetModuleHandleA(moduleName.c_str()));
-        if (!m_modBase)
+        g_pHand = GetModuleHandleA(moduleName.c_str());
+        if (!g_pHand)
             return result;
 
-        //  Initialize PCSX2 Classes
-        CGlobals::g_gs_renderer = reinterpret_cast<GSRenderer**>(m_modBase + gRenderer);
-        CGlobals::g_gs_device   = reinterpret_cast<GSDevice**>(m_modBase + gDevice);
-        CGlobals::g_emu_thread  = reinterpret_cast<EmuThread**>(m_modBase + gEmu);
+        __int64 moduleBase = reinterpret_cast<__int64>(g_pHand);
+        CGlobals::g_gs_device = reinterpret_cast<GSDevice*>(*(__int64*)(moduleBase + gDevice));
+        if (!CGlobals::g_gs_device)
+            return false;
 
-        result = (CGlobals::g_gs_renderer > 0 && CGlobals::g_gs_device > 0 && CGlobals::g_emu_thread > 0);
-        if (result)
-        {
-            Console::LogMsg("[+] PCSX2 Framework Client Initialized!\n"
-                "gs_Renderer:\t0x%llX\n"
-                "gs_Device:\t0x%llX\n"
-                "gs_Emu:\t0x%llX\n"
-                "EEMem:\t0x%llX\n",
-                CGlobals::g_gs_renderer,
-                CGlobals::g_gs_device,
-                CGlobals::g_emu_thread,
-                Memory::GetBasePS2Address()
-            );
-        }
-        return result;
+        CGlobals::g_console = Console::GetDefaultInstance();
+        CGlobals::g_engine = Engine::GetDefaultInstance();
+        CGlobals::g_memory = Memory::GetDefaultInstance();
+
+        Console::LogMsg("[+] PCSX2 Framework Client Initialized!\nmodBase:\t0x%llX\nPS2ModBase:\t0x%llX\ng_gs_device:\t0x%llX\nRenderAPI:\t%d\n", 
+            moduleBase,  
+            Memory::GetBasePS2Address(), 
+            CGlobals::g_gs_device, 
+            GSDevice::GetRenderAPI()
+        );
+
+        return true;
     }
 
     ///---------------------------------------------------------------------------------------------------
     // Template Initialization function
     //  NOTE: offsets will not always be correct
-    bool InitSDK() { return InitSDK("pcsx2-qt.exe", 0x40D4B98, 0x40D4AA0, 0xDD30BD8); }
+    bool InitSDK() { return InitSDK("pcsx2-qt.exe", 0x3FA2728); }
 
     ///---------------------------------------------------------------------------------------------------
     void ShutdownSDK()
     {
-        // clear pointers   (effectively freeing the memory)
-        CGlobals::g_gs_renderer = nullptr;     
-        CGlobals::g_gs_device   = nullptr;  
-        CGlobals::g_emu_thread  = nullptr;  
+        Console::DestroyConsole();
     }
 
     ///---------------------------------------------------------------------------------------------------
@@ -92,6 +92,7 @@ namespace PlayStation2
     HANDLE                  Console::m_pPipe;
     bool                    Console::m_isConsoleAllocated{ false };
     bool                    Console::m_isVisible{ true };
+    Console*                Console::m_instance = new Console();
 
     ///---------------------------------------------------------------------------------------------------
     Console::Console()
@@ -102,9 +103,9 @@ namespace PlayStation2
         AllocConsole();														//  Allocate console for output
         m_pHandle = GetStdHandle(STD_OUTPUT_HANDLE);					    //  Store handle to console
         m_pWndw = GetConsoleWindow();									    //  Store WindowHandle to console
-        freopen_s(&m_pInStream, "CONIN$", "r", stdout);	                    //  Establish input stream
+        freopen_s(&m_pInStream, "CONIN$", "r", stdin);	                    //  Establish input stream
         freopen_s(&m_pOutStream, "CONOUT$", "w", stdout);	                //  Establish ouput stream
-        freopen_s(&m_pErrStream, "CONOUT$", "w", stdout);	                //  Establish error stream
+        freopen_s(&m_pErrStream, "CONOUT$", "w", stderr);	                //  Establish error stream
         ShowWindow(m_pWndw, m_isVisible ? SW_SHOW : SW_HIDE);		        //	Show console window based on visible state
         m_isConsoleAllocated = true;
     }
@@ -118,18 +119,21 @@ namespace PlayStation2
         AllocConsole();														//  Allocate console for output
         m_pHandle = GetStdHandle(STD_OUTPUT_HANDLE);					    //  Store handle to console
         m_pWndw = GetConsoleWindow();									    //  Store WindowHandle to console
-        freopen_s(&m_pInStream, "CONIN$", "r", stdout);	                    //  Establish input stream
+        freopen_s(&m_pInStream, "CONIN$", "r", stdin);	                    //  Establish input stream
         freopen_s(&m_pOutStream, "CONOUT$", "w", stdout);	                //  Establish ouput stream
-        freopen_s(&m_pErrStream, "CONOUT$", "w", stdout);	                //  Establish error stream
+        freopen_s(&m_pErrStream, "CONOUT$", "w", stderr);	                //  Establish error stream
         ShowWindow(m_pWndw, m_isVisible ? SW_SHOW : SW_HIDE);		        //	Show console window based on visible state
         SetConsoleTitleA(title);                                            //  Set console window title
         m_isConsoleAllocated = true;
     }
 
     ///---------------------------------------------------------------------------------------------------
+    Console* Console::GetDefaultInstance() { return m_instance; }
+
+    ///---------------------------------------------------------------------------------------------------
     void Console::DestroyConsole()
     {
-        if (m_isConsoleAllocated)
+        if (!m_isConsoleAllocated)
             return;
 
         m_isConsoleAllocated = false;                                       //
@@ -144,9 +148,6 @@ namespace PlayStation2
     //---------------------------------------------------------------------------------------------------
     void Console::LogMsgEx(FILE* stream, HANDLE pHand, const char* msg, EConsoleColors color, va_list args)
     {
-        if (!m_isConsoleAllocated)
-            return;
-
         SetConsoleTextAttribute(pHand, color);					            //	Set output text color
         vfprintf(stream, msg, args);								        //	print
         SetConsoleTextAttribute(pHand, EConsoleColors::DEFAULT);	        //	Restore output text color to default
@@ -179,40 +180,44 @@ namespace PlayStation2
     //----------------------------------------------------------------------------------------------------
     //										ENGINE
     //-----------------------------------------------------------------------------------
+    Engine* Engine::m_instance = new Engine();
 
     ///---------------------------------------------------------------------------------------------------
     //  D3D Template Hook
-    void Engine::D3D11HookPresent(IDXGISwapChain* p, IDXGISwapChainPresent ofnc, void* nFnc)
+    bool Engine::D3D11HookPresent(IDXGISwapChain* p, void* ofnc, void* nFnc)
     {
-        //  Get Device Context
-        auto device = *CGlobals::g_gs_device;
-        if (!device)
-            return;
+        if (GSDevice::GetRenderAPI() != RenderAPI::D3D11)
+            return false;
 
         // Get GS Device
-        auto d3d11 = reinterpret_cast<GSDevice11*>(device);
+        auto d3d11 = static_cast<GSDevice11*>(CGlobals::g_gs_device);
         if (!d3d11)
-            return;
+            return false;
 
         //  Get SwapChain
         p = d3d11->GetSwapChain();
         if (!p)
-            return;
+            return false;
 
         // Hook
         hkVFunction(p, 8, ofnc, nFnc);
+
+        return true;
     }
 
     ///---------------------------------------------------------------------------------------------------
-    void Engine::D3D11UnHookPresent(IDXGISwapChain* p, IDXGISwapChainPresent ofnc)
+    void Engine::D3D11UnHookPresent(IDXGISwapChain* p, void* ofnc)
     {
         if (!p)
             return;
 
         hkRestoreVFunction(p, 8, ofnc);
         p = nullptr;
-        ofnc = NULL;
+        ofnc = 0;
     }
+
+    ///---------------------------------------------------------------------------------------------------
+    Engine* Engine::GetDefaultInstance() { return m_instance; }
 
     //----------------------------------------------------------------------------------------------------
 	//										MEMORY
@@ -225,6 +230,7 @@ namespace PlayStation2
     uintptr_t                Memory::BasePS2MemorySpace;                             
     ProcessInfo              Memory::Process;                                        
     bool                     Memory::m_isInitialized;                
+    Memory*                  Memory::m_instance = new Memory();
 
     //----------------------------------------------------------------------------------------------------
     //  CONSTRUCTORS
@@ -245,7 +251,7 @@ namespace PlayStation2
 
     ///---------------------------------------------------------------------------------------------------
     //	[MEMORY]
-
+    Memory* Memory::GetDefaultInstance() { return m_instance; }
 
     ///---------------------------------------------------------------------------------------------------
     uintptr_t Memory::GetBasePS2Address() { return BasePS2MemorySpace; }

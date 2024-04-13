@@ -12,13 +12,17 @@ namespace PlayStation2
     class PCSX2
     {	
     public:     //  ~
+        static RenderAPI(__fastcall* GSDevice_GetRenderAPI_stub)(GSDevice*);       //  vfIndex [9] /// Returns the graphics API used by this device.
 
 
 
     private:    //  ~
         uintptr_t hk_OnLeftDClick   = NULL; //  Signature("48 8B 05 ? ? ? ? 80 B8 ? ? ? ? ? 74 0C").Scan().As<uint64_t>();
-        uintptr_t hk_ResetEE        = NULL; //  Signature("80 3D ? ? ? ? ? 74 13 B8 ? ? ? ? 86").Scan().As<uint64_t>();	// 80 3D 09 18 E8 0C 00 74 13 B8 01 00 00 00 86 05 DF 0B E8 0C C6 05 F6 17 E8 0C 01
+        uintptr_t hk_ResetEE        = NULL; //  Signature("80 3D ? ? ? ? ? 74 13 B8 ? ? ? ? 86").Scan().As<uint64_t>();	// 80 3D ? ? ? ? ? 75 30 C6 05 ? ? ? ? ? C6
         void __cdecl recResetEE(uintptr_t Address); //  calls recResetEE
+
+        void(__fastcall* recResetEE_stub)();                                //  
+        void(__fastcall* GSUpdateDisplayWindow_stub)();                     //  48 83 EC 48 48 8B 0D ? ? ? ? 48
     };
 
     class GSRenderer
@@ -36,14 +40,51 @@ namespace PlayStation2
         //  -- instead functions will be used to obtain variables as this does not change the size of the class or inherited classes.
 
     public:
-        RenderAPI                       GetRenderAPI();         //  Obtain the current render api. Should be used to get the current class instance of GDevice
+        static RenderAPI                GetRenderAPI();         //  Obtain the current render api. Should be used to get the current class instance of GDevice
+
+
+    private:
+        virtual void                    vf_CreateSurface();
+        virtual void                    vf_Function1();
+        virtual void                    vf_Function2();
+        virtual void                    vf_DoFXAA();
+        virtual void                    vf_Function4();
+        virtual void                    vf_Function5();
+        virtual void                    vf_Function6();
+        virtual void                    vf_Create();
+        virtual void                    vf_Destroy();
+        virtual void                    vf_GetRenderAPI();
+        virtual void                    vf_HasSurface();
+        virtual void                    vf_Function11();
+        virtual void                    vf_UpdateWindow();
+        virtual void                    vf_ResizeWindow();
+        virtual void                    vf_SupportsExclusiveFullscreen();
+        virtual void                    vf_Function15();
+        virtual void                    vf_Function16();
+        virtual void                    vf_Function17();
+        virtual void                    vf_GetHostRefreshRate();
+        virtual void                    vf_GetDriverInfo();
+        virtual void                    vf_Function20();
+        virtual void                    vf_Function21();
+        virtual void                    vf_Function22();
+        virtual void                    vf_Function23();
+        virtual void                    vf_Function24();
+        virtual void                    vf_Function25();
+        virtual void                    vf_Function26();
+        virtual void                    vf_Function27();
+        virtual void                    vf_Function28();
+        virtual void                    vf_Function29();
+        virtual void                    vf_Function30();
+        virtual void                    vf_Function31();
+        virtual void                    vf_Function32();
+        virtual void                    vf_RenderHW();
+        virtual void                    vf_Function34();
     };
 
     /*
         GSDevice11 : DirectX11 Rendering API
         - 0x0 = vfTable
     */
-
     class GSDevice11 : public GSDevice
     {
     private:
@@ -71,43 +112,6 @@ namespace PlayStation2
         IDXGISwapChain*                 GetSwapChain();
         ID3D11Device*                   GetDevice();
         DXGI_SWAP_CHAIN_DESC            GetDesc();
-
-    private:
-        virtual void                    vf_CreateSurface();
-        virtual void                    vf_Function1();
-        virtual void                    vf_Function2();
-        virtual void                    vf_DoFXAA();
-        virtual void                    vf_Function4();
-        virtual void                    vf_Function5();
-        virtual void                    vf_Function6();
-        virtual void                    vf_Create();
-        virtual void                    vf_Function8();
-        virtual void                    vf_Function9();
-        virtual void                    vf_Function10();
-        virtual void                    vf_Function11();
-        virtual void                    vf_UpdateWindow();
-        virtual void                    vf_ResizeWindow();
-        virtual void                    vf_Function14();
-        virtual void                    vf_Function15();
-        virtual void                    vf_Function16();
-        virtual void                    vf_Function17();
-        virtual void                    vf_GetHostRefreshRate();
-        virtual void                    vf_GetDriverInfo();
-        virtual void                    vf_Function20();
-        virtual void                    vf_Function21();
-        virtual void                    vf_Function22();
-        virtual void                    vf_Function23();
-        virtual void                    vf_Function24();
-        virtual void                    vf_Function25();
-        virtual void                    vf_Function26();
-        virtual void                    vf_Function27();
-        virtual void                    vf_Function28();
-        virtual void                    vf_Function29();
-        virtual void                    vf_Function30();
-        virtual void                    vf_Function31();
-        virtual void                    vf_Function32();
-        virtual void                    vf_RenderHW();
-        virtual void                    vf_Function34();
     };  //Size: 0x0138
 
     /*

@@ -22,23 +22,17 @@ namespace PlayStation2
         pResetEE();
     }
 
+    //----------------------------------------------------------------------------------------------------
+    //										GSDevice
+    //-----------------------------------------------------------------------------------
+
     RenderAPI GSDevice::GetRenderAPI()
     {
-        //  swapchain will be null when a rendering device is not being used
-        //  thankfully each swapchain member variable is located at a different offset per each rendering api
-        //  we can cast our current instance to each rendering api class instance and check whcih swapchain is non nullptr and return the enum
-
-        if (reinterpret_cast<GSDevice11*>(this)->isValidSwapChain())
-            return RenderAPI::D3D11;
-          
-        if (reinterpret_cast<GSDevice12*>(this)->isValidSwapChain())
-            return RenderAPI::D3D12;
-
-        return RenderAPI::None;
+        return CallVFunction<RenderAPI>(CGlobals::g_gs_device, 9);
     }
 
     //----------------------------------------------------------------------------------------------------
-    //										DirectX 11
+    //									GSDevice :: DirectX 11
     //-----------------------------------------------------------------------------------
     bool GSDevice11::isValidSwapChain() { return m_swap_chain != nullptr; }
     IDXGISwapChain* GSDevice11::GetSwapChain() { return m_swap_chain; }
@@ -52,7 +46,7 @@ namespace PlayStation2
     }
 
     //----------------------------------------------------------------------------------------------------
-    //										DirectX 12
+    //									GSDevice :: DirectX 12
     //-----------------------------------------------------------------------------------
     bool GSDevice12::isValidSwapChain() { return m_swap_chain != nullptr; }
     IDXGISwapChain* GSDevice12::GetSwapChain() { return m_swap_chain; }

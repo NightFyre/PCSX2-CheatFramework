@@ -10,13 +10,14 @@
 #pragma pack(push, 0x01)
 namespace PlayStation2
 {
-	enum RenderAPI
+	enum class RenderAPI
 	{
-		None	= 0,
-		D3D11	= 1,
-		D3D12	= 2,
-		OpenGL	= 4,
-		Vulkan	= 3
+		None,
+		D3D11,
+		Metal,
+		D3D12,
+		Vulkan,
+		OpenGL
 	};
 }
 #pragma pack(pop)

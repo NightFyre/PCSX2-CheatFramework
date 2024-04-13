@@ -12,6 +12,7 @@ namespace PlayStation2
     class Console
     {
     public:
+        static Console*                 GetDefaultInstance();
         static void                     LogMsgEx(FILE* stream, HANDLE pHand, const char* msg, EConsoleColors color, va_list args);      //  Logs message to the console
         static void                     LogMsg(const char* msg, ...);                                                                   //  Easily logs message to the console
         static void                     cLogMsg(const char* msg, EConsoleColors color, ...);                                            //  Logs a color message to the console
@@ -32,21 +33,28 @@ namespace PlayStation2
         static bool                     m_isConsoleAllocated;           //  flag for console creation
         static bool                     m_isVisible;                    //  flag for displaying console window
         static std::mutex               m_mutex;                        //  lock to ensure thread safety
+        static Console*                 m_instance;                     //  static class instance
     };
 
     class Engine
     {
+    public:
         typedef HRESULT(APIENTRY* IDXGISwapChainPresent)(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags);
     
     public:
-        static void                    D3D11HookPresent(IDXGISwapChain* p, IDXGISwapChainPresent ofnc, void* nFnc);                             //
-        static void                    D3D11UnHookPresent(IDXGISwapChain* p, IDXGISwapChainPresent ofnc);                                       //
+        static Engine*                 GetDefaultInstance();
+        static bool                    D3D11HookPresent(IDXGISwapChain* p, void* ofnc, void* nFnc);                             //
+        static void                    D3D11UnHookPresent(IDXGISwapChain* p, void* ofnc);                                       //
+
+    private:
+        static Engine*                 m_instance;                     //  static class instance
     };
 
     class Memory
     {
     
     public: //  METHODS
+        static Memory*                  GetDefaultInstance();
         static uintptr_t                GetBasePS2Address();   //  returns the module base of the game
         static bool                     ObtainProcessInfo(ProcessInfo& pInfo);
         static uintptr_t                GetPS2Address(unsigned int RAW_PS2_OFFSET);
@@ -99,8 +107,8 @@ namespace PlayStation2
         static uintptr_t                dwEEMem;                                        //  EEMem Pointer
         static uintptr_t                BasePS2MemorySpace;                             //  EEMem Base Address
         static ProcessInfo              Process;                                        //  Process Information Struct
+        static Memory*                  m_instance;                     //  static class instance
     };
-
 
     class Tools
     {
@@ -113,25 +121,27 @@ namespace PlayStation2
     public:
 
         /*
-            __int64 GSUpdateDisplayWindow() -> g_gs_renderer
-            .text:000000014015095F                 mov     rcx, cs:g_gs_renderer
-            AOB: 48 8B 0D 32 42 F8 03
+            
+            AOB: 
         */
-        static class GSRenderer**       g_gs_renderer;
+        static class GSRenderer*        g_gs_renderer;
 
         /*
-            __int64 GSUpdateDisplayWindow() -> g_gs_device
-            .text:00000001401508C5                 mov     rax, cs:g_gs_device
-            AOB: 48 8B 05 D4 41 F8 03
+            
+            AOB: 48 8B 0D ? ? ? ? 48 85 C9 74 20
         */
-        static class GSDevice**         g_gs_device;
+        static class GSDevice*          g_gs_device;
 
         /*
-            __int64 __fastcall OpenGSDevice(char a1, unsigned int a2) -> g_emu_thread
-            .text:000000014035C32F                 mov     rcx, cs:g_emu_thread
-            AOB: 48 8B 0D A2 48 9D 0D
+            
+            AOB: 48 8B 3D ? ? ? ? 80 7F
         */
-        static class EmuThread**        g_emu_thread;
+        static class EmuThread*         g_emu_thread;
+
+        //  
+        static class Console*           g_console;
+        static class Engine*            g_engine;
+        static class Memory*            g_memory;
     
     };
 
