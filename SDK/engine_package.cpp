@@ -26,19 +26,32 @@ namespace PlayStation2
     ///---------------------------------------------------------------------------------------------------
     bool InitSDK(const std::string& moduleName, unsigned int gRenderer, unsigned int gDevice, unsigned int gEmu)
     {
+        bool result{ false };
+
         auto m_modBase = reinterpret_cast<__int64>(GetModuleHandleA(moduleName.c_str()));
         if (!m_modBase)
-            return FALSE;
-
-        g_Engine = std::make_unique<Engine>();                      // Initialize Core Class
-        Memory::Memory();                                           //  Init Memory 
+            return result;
 
         //  Initialize PCSX2 Classes
         CGlobals::g_gs_renderer = reinterpret_cast<GSRenderer**>(m_modBase + gRenderer);
         CGlobals::g_gs_device   = reinterpret_cast<GSDevice**>(m_modBase + gDevice);
         CGlobals::g_emu_thread  = reinterpret_cast<EmuThread**>(m_modBase + gEmu);
 
-        return TRUE;
+        result = (CGlobals::g_gs_renderer > 0 && CGlobals::g_gs_device > 0 && CGlobals::g_emu_thread > 0);
+        if (result)
+        {
+            Console::LogMsg("[+] PCSX2 Framework Client Initialized!\n"
+                "gs_Renderer:\t0x%llX\n"
+                "gs_Device:\t0x%llX\n"
+                "gs_Emu:\t0x%llX\n"
+                "EEMem:\t0x%llX\n",
+                CGlobals::g_gs_renderer,
+                CGlobals::g_gs_device,
+                CGlobals::g_emu_thread,
+                Memory::GetBasePS2Address()
+            );
+        }
+        return result;
     }
 
     ///---------------------------------------------------------------------------------------------------
@@ -53,10 +66,6 @@ namespace PlayStation2
         CGlobals::g_gs_renderer = nullptr;     
         CGlobals::g_gs_device   = nullptr;  
         CGlobals::g_emu_thread  = nullptr;  
-        
-        //  cleanup console if not handled by the user
-        if (g_Engine->isConsolePresent())
-            g_Engine->DestroyConsole();
     }
 
     ///---------------------------------------------------------------------------------------------------
@@ -70,45 +79,110 @@ namespace PlayStation2
 	int GetVtblIndex(void* fncPtr, void* vTblAddr) { return (((__int64)fncPtr - (__int64)vTblAddr) / sizeof(void*)) - 1; }
 
     //----------------------------------------------------------------------------------------------------
+    //										CONSOLE
+    //-----------------------------------------------------------------------------------
+
+    ///---------------------------------------------------------------------------------------------------
+    //  STATICS
+    FILE*                   Console::m_pInStream;
+    FILE*                   Console::m_pOutStream;
+    FILE*                   Console::m_pErrStream;
+    HANDLE                  Console::m_pHandle;
+    HWND	                Console::m_pWndw;
+    HANDLE                  Console::m_pPipe;
+    bool                    Console::m_isConsoleAllocated{ false };
+    bool                    Console::m_isVisible{ true };
+
+    ///---------------------------------------------------------------------------------------------------
+    Console::Console()
+    {
+        if (m_isConsoleAllocated)
+            return;
+
+        AllocConsole();														//  Allocate console for output
+        m_pHandle = GetStdHandle(STD_OUTPUT_HANDLE);					    //  Store handle to console
+        m_pWndw = GetConsoleWindow();									    //  Store WindowHandle to console
+        freopen_s(&m_pInStream, "CONIN$", "r", stdout);	                    //  Establish input stream
+        freopen_s(&m_pOutStream, "CONOUT$", "w", stdout);	                //  Establish ouput stream
+        freopen_s(&m_pErrStream, "CONOUT$", "w", stdout);	                //  Establish error stream
+        ShowWindow(m_pWndw, m_isVisible ? SW_SHOW : SW_HIDE);		        //	Show console window based on visible state
+        m_isConsoleAllocated = true;
+    }
+
+    ///---------------------------------------------------------------------------------------------------
+    Console::Console(const char* title)
+    {
+        if (m_isConsoleAllocated)
+            return;
+
+        AllocConsole();														//  Allocate console for output
+        m_pHandle = GetStdHandle(STD_OUTPUT_HANDLE);					    //  Store handle to console
+        m_pWndw = GetConsoleWindow();									    //  Store WindowHandle to console
+        freopen_s(&m_pInStream, "CONIN$", "r", stdout);	                    //  Establish input stream
+        freopen_s(&m_pOutStream, "CONOUT$", "w", stdout);	                //  Establish ouput stream
+        freopen_s(&m_pErrStream, "CONOUT$", "w", stdout);	                //  Establish error stream
+        ShowWindow(m_pWndw, m_isVisible ? SW_SHOW : SW_HIDE);		        //	Show console window based on visible state
+        SetConsoleTitleA(title);                                            //  Set console window title
+        m_isConsoleAllocated = true;
+    }
+
+    ///---------------------------------------------------------------------------------------------------
+    void Console::DestroyConsole()
+    {
+        if (m_isConsoleAllocated)
+            return;
+
+        m_isConsoleAllocated = false;                                       //
+        m_isVisible = true;                                                 //
+        fclose(m_pInStream);                                                //  
+        fclose(m_pOutStream);                                               //  
+        fclose(m_pErrStream);                                               //  
+        DestroyWindow(m_pWndw);                                             //  
+        FreeConsole();
+    }	
+    
+    //---------------------------------------------------------------------------------------------------
+    void Console::LogMsgEx(FILE* stream, HANDLE pHand, const char* msg, EConsoleColors color, va_list args)
+    {
+        if (!m_isConsoleAllocated)
+            return;
+
+        SetConsoleTextAttribute(pHand, color);					            //	Set output text color
+        vfprintf(stream, msg, args);								        //	print
+        SetConsoleTextAttribute(pHand, EConsoleColors::DEFAULT);	        //	Restore output text color to default
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    void Console::LogMsg(const char* text, ...)
+    {
+        if (!m_isConsoleAllocated)
+            return;
+        
+        va_list args;												        //	declare arguments
+        va_start(args, text);										        //	get arguments
+        LogMsgEx(m_pOutStream, m_pHandle, text, EConsoleColors::DEFAULT, args);//	print
+        va_end(args);												        //	clear arguments
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    void Console::cLogMsg(const char* text, EConsoleColors color, ...)
+    {
+        if (!m_isConsoleAllocated)
+            return;
+
+        va_list args;												        //	declare arguments
+        va_start(args, text);										        //	get arguments
+        LogMsgEx(m_pOutStream, m_pHandle, text, color, args);		        //	print
+        va_end(args);												        //	clear arguments
+    }
+
+    //----------------------------------------------------------------------------------------------------
     //										ENGINE
     //-----------------------------------------------------------------------------------
 
     ///---------------------------------------------------------------------------------------------------
-    void Engine::CreateConsole(const char* title, bool bShow)
-    {
-        AllocConsole();														//  Allocate console for output
-        p_bShowWindow = bShow;                                              //  set visible flag
-        p_wndw_handle = GetConsoleWindow();									//  Store WindowHandle to console
-        p_console_handle = GetStdHandle(STD_OUTPUT_HANDLE);					//  Store handle to console
-        freopen_s(&p_fin_stream, "CONIN$", "r", stdout);	                //  Establish input stream
-        freopen_s(&p_fout_stream, "CONOUT$", "w", stdout);	                //  Establish ouput stream
-        freopen_s(&p_ferr_stream, "CONOUT$", "w", stdout);	                //  Establish error stream
-        SetConsoleTitleA(title);					                        //  Set console title
-        ShowWindow(p_wndw_handle, p_bShowWindow ? SW_SHOW : SW_HIDE);		//	Show console window based on visible state
-        p_bConsole = TRUE;
-    }   
-
-    ///---------------------------------------------------------------------------------------------------
-    void Engine::DestroyConsole()
-    {
-        if (!p_bConsole || !p_fout_stream)
-            return;
-
-        p_bConsole      = false;                                            //
-        p_bShowWindow   = false;                                            //
-        fclose(p_fout_stream);                                              //  
-        fclose(p_fin_stream);                                               //  
-        fclose(p_ferr_stream);                                              //  
-        DestroyWindow(p_wndw_handle);                                       //  
-        FreeConsole();                                                      //  
-    }
-
-    ///---------------------------------------------------------------------------------------------------
-    bool Engine::isConsolePresent() { return this->p_bConsole; }
-
-    ///---------------------------------------------------------------------------------------------------
     //  D3D Template Hook
-    void Engine::D3D11HookPresent()
+    void Engine::D3D11HookPresent(IDXGISwapChain* p, IDXGISwapChainPresent ofnc, void* nFnc)
     {
         //  Get Device Context
         auto device = *CGlobals::g_gs_device;
@@ -120,49 +194,63 @@ namespace PlayStation2
         if (!d3d11)
             return;
 
-        this->m_pSwapChain = d3d11->GetSwapChain();
-        if (!this->m_pSwapChain)
+        //  Get SwapChain
+        p = d3d11->GetSwapChain();
+        if (!p)
             return;
 
         // Hook
-        hkVFunction(this->m_pSwapChain, 8, this->fnc_oIDXGISwapChainPresent, this->hkPresent);
+        hkVFunction(p, 8, ofnc, nFnc);
     }
-    void Engine::D3D11UnHookPresent()
+
+    ///---------------------------------------------------------------------------------------------------
+    void Engine::D3D11UnHookPresent(IDXGISwapChain* p, IDXGISwapChainPresent ofnc)
     {
-        if (!this->m_pSwapChain)
+        if (!p)
             return;
 
-        hkRestoreVFunction(this->m_pSwapChain, 8, this->fnc_oIDXGISwapChainPresent);
-        this->m_pSwapChain = nullptr;
-        this->fnc_oIDXGISwapChainPresent = NULL;
-    }
-    HRESULT APIENTRY Engine::hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags)
-    {
-        //  Additional logic goes here
-
-        // detour exit
-        return g_Engine->fnc_oIDXGISwapChainPresent(pSwapChain, SyncInterval, Flags);
+        hkRestoreVFunction(p, 8, ofnc);
+        p = nullptr;
+        ofnc = NULL;
     }
 
     //----------------------------------------------------------------------------------------------------
 	//										MEMORY
 	//-----------------------------------------------------------------------------------
 
-    //  Constructors
+    //----------------------------------------------------------------------------------------------------
+    //  STATICS
+    uintptr_t                Memory::dwGameBase;                                     
+    uintptr_t                Memory::dwEEMem;                                        
+    uintptr_t                Memory::BasePS2MemorySpace;                             
+    ProcessInfo              Memory::Process;                                        
+    bool                     Memory::m_isInitialized;                
+
+    //----------------------------------------------------------------------------------------------------
+    //  CONSTRUCTORS
     Memory::Memory()
     {
+        if (m_isInitialized)
+            return;
+
         if (ObtainProcessInfo(Process))
         {
             Memory::dwGameBase          = (uintptr_t)Process.m_ModuleBase;
             Memory::dwEEMem             = (uintptr_t)GetProcAddress((HMODULE)Process.m_ModuleHandle, "EEmem");
             Memory::BasePS2MemorySpace  = *(uintptr_t*)dwEEMem;
+            m_isInitialized = true;
         }
     }
     Memory::~Memory() {}
 
     ///---------------------------------------------------------------------------------------------------
     //	[MEMORY]
-    //  
+
+
+    ///---------------------------------------------------------------------------------------------------
+    uintptr_t Memory::GetBasePS2Address() { return BasePS2MemorySpace; }
+
+    ///---------------------------------------------------------------------------------------------------
     bool Memory::ObtainProcessInfo(ProcessInfo& pInfo)
     {
         // Get initial process info

@@ -250,5 +250,25 @@ namespace PlayStation2
 		Vector2		m_WindowSize{};
 	};
 
+	enum EConsoleColors : int 
+	{
+		dark_blue = 1,
+		dark_green,
+		dark_teal,
+		dark_red,
+		dark_pink,
+		dark_yellow,
+		dark_white,
+		dark_gray,
+		blue,
+		green,
+		teal,
+		red,
+		pink,
+		yellow,
+		white,
+		DEFAULT = white,
+	};
+
 }
 #pragma pack(pop)
