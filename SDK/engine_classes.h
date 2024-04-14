@@ -9,6 +9,8 @@
 #pragma pack(push, 0x01)
 namespace PlayStation2
 {
+    //  @TODO: hook pcsx2 console update function for thread context & use pcsx2 console for output.
+    //  bool (__fastcall* ConsoleWriteLine)(ConsoleColor, const char*, ...);
     class Console
     {
     public:
@@ -121,7 +123,6 @@ namespace PlayStation2
     public:
 
         /*
-            
             AOB: 
         */
         static class GSRenderer*        g_gs_renderer;
@@ -133,8 +134,6 @@ namespace PlayStation2
         static class GSDevice*          g_gs_device;
 
         /*
-            
-            AOB: 48 8B 3D ? ? ? ? 80 7F
         */
         static class EmuThread*         g_emu_thread;
 

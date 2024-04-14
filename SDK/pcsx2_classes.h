@@ -11,28 +11,66 @@ namespace PlayStation2
 {
     class PCSX2
     {	
-    public:     //  ~
-        static RenderAPI(__fastcall* GSDevice_GetRenderAPI_stub)(GSDevice*);       //  vfIndex [9] /// Returns the graphics API used by this device.
+    public:
+        
+        /*
+            -   
+        */
+        static unsigned int o_gs_device;                                                //  global pointer to GSDevice
+        static unsigned int o_GSDevice_GetRenderAPI;                                    //  offset to function  //  GSDevice::vfIndex [9]
+        static RenderAPI(__fastcall* GSDevice_GetRenderAPI_stub)(GSDevice*);            //  Returns the graphics API used by this device.
 
+        /*
+            -
+        */
+        static unsigned int o_GSUpdateWindow;                                           //  offset to function  //   GSDevice::vfIndex [12]
+        static __int64(__fastcall* GSUpdateDisplayWindow_stub)();                       //  [ Nightly AOB: 48 83 EC 48 48 8B 0D ? ? ? ? 48 ] [ Soource AOB: 48 83 EC 48 48 8B 0D ? ? ? ? 48 8B ]
 
+        /*
+            -   
+        */
+        static unsigned int o_psxRecompileInstruction;                                  //  offset to function  
+        static __int64(__fastcall* psxRecompileNextInstruction_stub)(char, char);       //  [ Nightly AOB: E8 ? ? ? ? 8B 05 ? ? ? ? 8B 0D ? ? ? ? 85 ]  [ Source AOB: E8 ? ? ? ? 8B 15 ? ? ? ? 85 D2 75 ]
 
+        /*
+            -   
+        */
+        static unsigned int o_recResetEE;                                               //  offset to function
+        static void(__fastcall* recResetEE_stub)();                                     //  [ Nightly AOB: 80 3D ?? ?? ?? ?? ?? 75 30 C6 05 ?? ?? ?? ?? ?? C6 ]  [ Source AOB: 80 3D ? ? ? ? ? 74 3D 80 ]
+        static void ResetEE();                                                          //  helper function utilizing the offsets and prototype fn
+
+        /*
+        
+            //  Function: psxRecompileNextInstruction
+            //  AOB: [ Nightly AOB: E8 ? ? ? ? 8B 05 ? ? ? ? 8B 0D ? ? ? ? 85 ]  [ Source AOB: E8 ? ? ? ? 8B 15 ? ? ? ? 85 D2 75 ]
+            //  .text:0000000140269D96                 mov     r15d, cs:dword_142EA809C 
+            //  v3 = dword_142EA809C;           // psxRegs.code // 0x20C
+        */
+        static psxRegisters g_psxRegs;  
+        static __int32 g_psxpc;             //
+
+        //  DEPRECATED: pcsx2 1.6
     private:    //  ~
         uintptr_t hk_OnLeftDClick   = NULL; //  Signature("48 8B 05 ? ? ? ? 80 B8 ? ? ? ? ? 74 0C").Scan().As<uint64_t>();
         uintptr_t hk_ResetEE        = NULL; //  Signature("80 3D ? ? ? ? ? 74 13 B8 ? ? ? ? 86").Scan().As<uint64_t>();	// 80 3D ? ? ? ? ? 75 30 C6 05 ? ? ? ? ? C6
-        void __cdecl recResetEE(uintptr_t Address); //  calls recResetEE
-
-        void(__fastcall* recResetEE_stub)();                                //  
-        void(__fastcall* GSUpdateDisplayWindow_stub)();                     //  48 83 EC 48 48 8B 0D ? ? ? ? 48
     };
 
     class GSRenderer
     {
     };
 
+    /*
+    
+        -
+    */
     class GSRendererHW
     {
     };
-
+    
+    /*
+        
+        -   
+    */
     class GSDevice
     {
     private:

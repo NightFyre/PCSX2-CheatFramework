@@ -12,6 +12,7 @@ DWORD WINAPI Client(LPVOID hInstance)
 
 #endif    
 
+    //  initialize pcsx2 cheat dev kit
     if (PlayStation2::InitSDK())
     {
 
@@ -20,12 +21,12 @@ DWORD WINAPI Client(LPVOID hInstance)
         {
             //  Exit Key
             if (GetAsyncKeyState(VK_END) & 1)
-                g_running ^= 1;   //  flips the bit
+                g_running = false;
 
         } while (g_running);
         
         //  cleanup
-        PlayStation2::ShutdownSDK();                        //  Shutdown the sdk
+        PlayStation2::ShutdownSDK(); 
     }
 
     //  Exit
