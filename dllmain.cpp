@@ -15,7 +15,6 @@ DWORD WINAPI Client(LPVOID hInstance)
     //  initialize pcsx2 cheat dev kit
     if (PlayStation2::InitSDK())
     {
-
         //  Render Loop
         do
         {

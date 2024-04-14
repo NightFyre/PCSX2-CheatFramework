@@ -24,19 +24,19 @@ namespace PlayStation2
             -
         */
         static unsigned int o_GSUpdateWindow;                                           //  offset to function  //   GSDevice::vfIndex [12]
-        static __int64(__fastcall* GSUpdateDisplayWindow_stub)();                       //  [ Nightly AOB: 48 83 EC 48 48 8B 0D ? ? ? ? 48 ] [ Soource AOB: 48 83 EC 48 48 8B 0D ? ? ? ? 48 8B ]
+        typedef __int64(__fastcall* GSUpdateDisplayWindow_stub)();                      //  [ Nightly AOB: 48 83 EC 48 48 8B 0D ? ? ? ? 48 ] [ Soource AOB: 48 83 EC 48 48 8B 0D ? ? ? ? 48 8B ]
 
         /*
             -   
         */
         static unsigned int o_psxRecompileInstruction;                                  //  offset to function  
-        static __int64(__fastcall* psxRecompileNextInstruction_stub)(char, char);       //  [ Nightly AOB: E8 ? ? ? ? 8B 05 ? ? ? ? 8B 0D ? ? ? ? 85 ]  [ Source AOB: E8 ? ? ? ? 8B 15 ? ? ? ? 85 D2 75 ]
+        typedef __int64(__fastcall* psxRecompileNextInstruction_stub)(char, char);      //  [ Nightly AOB: E8 ? ? ? ? 8B 05 ? ? ? ? 8B 0D ? ? ? ? 85 ]  [ Source AOB: E8 ? ? ? ? 8B 15 ? ? ? ? 85 D2 75 ]
 
         /*
             -   
         */
         static unsigned int o_recResetEE;                                               //  offset to function
-        static void(__fastcall* recResetEE_stub)();                                     //  [ Nightly AOB: 80 3D ?? ?? ?? ?? ?? 75 30 C6 05 ?? ?? ?? ?? ?? C6 ]  [ Source AOB: 80 3D ? ? ? ? ? 74 3D 80 ]
+        typedef void(__fastcall* recResetEE_stub)();                                    //  [ Nightly AOB: 80 3D ?? ?? ?? ?? ?? 75 30 C6 05 ?? ?? ?? ?? ?? C6 ]  [ Source AOB: 80 3D ? ? ? ? ? 74 3D 80 ]
         static void ResetEE();                                                          //  helper function utilizing the offsets and prototype fn
 
         /*
@@ -46,7 +46,7 @@ namespace PlayStation2
             //  .text:0000000140269D96                 mov     r15d, cs:dword_142EA809C 
             //  v3 = dword_142EA809C;           // psxRegs.code // 0x20C
         */
-        static psxRegisters g_psxRegs;  
+        static psxRegisters* g_psxRegs;  
         static __int32 g_psxpc;             //
 
         //  DEPRECATED: pcsx2 1.6

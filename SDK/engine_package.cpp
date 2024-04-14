@@ -46,12 +46,15 @@ namespace PlayStation2
         CGlobals::g_console = Console::GetDefaultInstance();
         CGlobals::g_engine = Engine::GetDefaultInstance();
         CGlobals::g_memory = Memory::GetDefaultInstance();
+        
+        PlayStation2::PCSX2::g_psxRegs = reinterpret_cast<PlayStation2::psxRegisters*>(((__int64)g_pHand + 0x2EA809C));    //  c style cast to structure
 
-        Console::LogMsg("[+] PCSX2 Framework Client Initialized!\nmodBase:\t0x%llX\nPS2ModBase:\t0x%llX\ng_gs_device:\t0x%llX\nRenderAPI:\t%d\n", 
+        Console::LogMsg("[+] PCSX2 Framework Client Initialized!\nmodBase:\t0x%llX\nPS2ModBase:\t0x%llX\ng_gs_device:\t0x%llX\nRenderAPI:\t%d\ng_psxRegs:\t0x%llX\n", 
             moduleBase,  
             Memory::GetBasePS2Address(), 
             CGlobals::g_gs_device, 
-            GSDevice::GetRenderAPI()
+            GSDevice::GetRenderAPI(),
+            PlayStation2::PCSX2::g_psxRegs
         );
 
         return true;
