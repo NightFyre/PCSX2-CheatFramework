@@ -19,6 +19,121 @@ namespace PlayStation2
 		Vulkan,
 		OpenGL
 	};
+	
+	struct GPR_reg
+	{
+		char pad_0000[16];	//0x0000
+	};	//Size: 0x0010
+
+	struct E_GPRRegs
+	{
+		GPR_reg r0;	//0x0000
+		GPR_reg at;	//0x0010
+		GPR_reg v0;	//0x0020
+		GPR_reg v1;	//0x0030
+		GPR_reg a0;	//0x0040
+		GPR_reg a1;	//0x0050
+		GPR_reg a2;	//0x0060
+		GPR_reg a3;	//0x0070
+		GPR_reg t0;	//0x0080
+		GPR_reg t1;	//0x0090
+		GPR_reg t2;	//0x00A0
+		GPR_reg t3;	//0x00B0
+		GPR_reg t4;	//0x00C0
+		GPR_reg t5;	//0x00D0
+		GPR_reg t6;	//0x00E0
+		GPR_reg t7;	//0x00F0
+		GPR_reg s0;	//0x0100
+		GPR_reg s1;	//0x0110
+		GPR_reg s2;	//0x0120
+		GPR_reg s3;	//0x0130
+		GPR_reg s4;	//0x0140
+		GPR_reg s5;	//0x0150
+		GPR_reg s6;	//0x0160
+		GPR_reg s7;	//0x0170
+		GPR_reg t8;	//0x0180
+		GPR_reg t9;	//0x0190
+		GPR_reg k0;	//0x01A0
+		GPR_reg k1;	//0x01B0
+		GPR_reg gp;	//0x01C0
+		GPR_reg sp;	//0x01D0
+		GPR_reg s8;	//0x01E0
+		GPR_reg ra;	//0x01F0
+	};	//Size: 0x0200
+
+
+	struct E_CP0regs
+	{
+		__int32 Index;		//0x0000
+		__int32 Random;		//0x0004
+		__int32 EntryLo0;	//0x0008
+		__int32 EntryLo1;	//0x000C
+		__int32 Context;	//0x0010
+		__int32 PageMask;	//0x0014
+		__int32 Wired;		//0x0018
+		__int32 Reserved0;	//0x001C
+		__int32 BadVAddr;	//0x0020
+		__int32 Count;		//0x0024
+		__int32 EntryHi;	//0x0028
+		__int32 Compare;	//0x002C
+		__int32 Status;		//0x0030	//	bitfield
+		__int32 Cause;		//0x0034
+		__int32 EPC;		//0x0038
+		__int32 PRid;		//0x003C
+		__int32 Config;		//0x0040
+		__int32 LLAddr;		//0x0044
+		__int32 WatchLO;	//0x0048
+		__int32 WatchHI;	//0x004C
+		__int32 XContext;	//0x0050
+		__int32 Reserved1;	//0x0054
+		__int32 Reserved2;	//0x0058
+		__int32 Debug;		//0x005C
+		__int32 DEPC;		//0x0060
+		__int32 PerfCnt;	//0x0064
+		__int32 ErrCtl;		//0x0068
+		__int32 CachErr;	//0x006C
+		__int32 TagLo;		//0x0070
+		__int32 TagHi;		//0x0074
+		__int32 ErrorEPC;	//0x0078
+		__int32 DESAVE;		//0x007C
+	};	//Size: 0x0080
+
+
+	struct PERFregs
+	{
+		unsigned int r[4];	//0x0000
+	};	//Size: 0x0010
+
+
+	/*
+		iR5900
+
+	*/
+	struct cpuRegisters
+	{
+		E_GPRRegs GPR;				//0x0000
+		GPR_reg HI;					//0x0200
+		GPR_reg LO;					//0x0210
+		E_CP0regs CP0;				//0x0220
+		__int32 sa;					//0x02A0
+		__int32 IsDelaySlot;		//0x02A4
+		__int32 pc;					//0x02A8
+		__int32 code;				//0x02AC
+		PERFregs PERF;				//0x02B0
+		__int32 eCycle[32];			//0x02C0
+		__int32 sCycle[32];			//0x0340
+		__int32 cycle;				//0x03C0
+		__int32 interrupt;			//0x03C4
+		__int32 branch;				//0x03C8
+		__int32 opmode;				//0x03CC
+		__int32 tempcycles;			//0x03D0
+		__int32 dmastall;			//0x03D4
+		__int32 pcWriteback;		//0x03D8
+		__int32 nextEventCycle;		//0x03DC
+		__int32 lastEventCycle;		//0x03E0
+		__int32 lastCOP0Cycle;		//0x03E4
+		__int32 LastPERFCycle[2];	//0x03E8
+	};	//Size: 0x03F0
 
 
 	struct GPRRegs
@@ -152,6 +267,9 @@ namespace PlayStation2
 		__int32 flag;	//0x007C
 	};	//Size: 0x0080
 
+	/*
+		
+	*/
 	struct psxRegisters
 	{
 		GPRRegs GPR;				//	0x0000	//	General Purpose Rehisters

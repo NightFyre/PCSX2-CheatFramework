@@ -34,29 +34,24 @@ namespace PlayStation2
     {
         bool result{ false };
 
-        g_pHand = GetModuleHandleA(moduleName.c_str());
-        if (!g_pHand)
+        HANDLE pHand = GetModuleHandleA(moduleName.c_str());
+        if (!pHand)
             return result;
 
-        __int64 moduleBase = reinterpret_cast<__int64>(g_pHand);
-        CGlobals::g_gs_device = reinterpret_cast<GSDevice*>(*(__int64*)(moduleBase + gDevice));
+        CGlobals::g_gs_device = reinterpret_cast<GSDevice*>(*(__int64*)(Memory::GetPCSX2Addr(gDevice)));
         if (!CGlobals::g_gs_device)
             return false;
 
         CGlobals::g_console = Console::GetDefaultInstance();
         CGlobals::g_engine = Engine::GetDefaultInstance();
         CGlobals::g_memory = Memory::GetDefaultInstance();
-        
-        PlayStation2::PCSX2::g_psxRegs = reinterpret_cast<PlayStation2::psxRegisters*>(((__int64)g_pHand + 0x2EA809C));    //  c style cast to structure
 
-        Console::LogMsg("[+] PCSX2 Framework Client Initialized!\nmodBase:\t0x%llX\nPS2ModBase:\t0x%llX\ng_gs_device:\t0x%llX\nRenderAPI:\t%d\ng_psxRegs:\t0x%llX\n", 
-            moduleBase,  
+        Console::LogMsg("[+] PCSX2 Framework Client Initialized!\nmodBase:\t0x%llX\nPS2ModBase:\t0x%llX\ng_gs_device:\t0x%llX\nRenderAPI:\t%d\n", 
+            (__int64)pHand,
             Memory::GetBasePS2Address(), 
             CGlobals::g_gs_device, 
-            GSDevice::GetRenderAPI(),
-            PlayStation2::PCSX2::g_psxRegs
+            GSDevice::GetRenderAPI()
         );
-
         return true;
     }
 
@@ -257,7 +252,16 @@ namespace PlayStation2
     Memory* Memory::GetDefaultInstance() { return m_instance; }
 
     ///---------------------------------------------------------------------------------------------------
+    uintptr_t Memory::GetBasePCSX2Address() { return dwGameBase; }
+
+    ///---------------------------------------------------------------------------------------------------
+    uintptr_t Memory::GetPCSX2Addr(unsigned int offset) { return dwGameBase + offset; }
+
+    ///---------------------------------------------------------------------------------------------------
     uintptr_t Memory::GetBasePS2Address() { return BasePS2MemorySpace; }
+
+    ///---------------------------------------------------------------------------------------------------
+    uintptr_t Memory::GetPS2Addr(unsigned int offset) { return BasePS2MemorySpace + offset; }
 
     ///---------------------------------------------------------------------------------------------------
     bool Memory::ObtainProcessInfo(ProcessInfo& pInfo)

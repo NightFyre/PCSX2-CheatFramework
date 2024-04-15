@@ -13,7 +13,5 @@
 
 
 using namespace std::chrono_literals;
-static bool g_running{ true };
-static HANDLE g_pHand{ nullptr };
 
 #endif //PCH_H

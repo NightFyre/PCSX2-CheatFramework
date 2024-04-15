@@ -18,7 +18,7 @@ namespace PlayStation2
         */
         static unsigned int o_gs_device;                                                //  global pointer to GSDevice
         static unsigned int o_GSDevice_GetRenderAPI;                                    //  offset to function  //  GSDevice::vfIndex [9]
-        static RenderAPI(__fastcall* GSDevice_GetRenderAPI_stub)(GSDevice*);            //  Returns the graphics API used by this device.
+        typedef RenderAPI(__fastcall* GSDevice_GetRenderAPI_stub)(GSDevice*);           //  Returns the graphics API used by this device.
 
         /*
             -
@@ -30,8 +30,14 @@ namespace PlayStation2
             -   
         */
         static unsigned int o_psxRecompileInstruction;                                  //  offset to function  
-        typedef __int64(__fastcall* psxRecompileNextInstruction_stub)(char, char);      //  [ Nightly AOB: E8 ? ? ? ? 8B 05 ? ? ? ? 8B 0D ? ? ? ? 85 ]  [ Source AOB: E8 ? ? ? ? 8B 15 ? ? ? ? 85 D2 75 ]
-
+        typedef void(__fastcall* psxRecompileNextInstruction_stub)(bool, bool);         //  [ Nightly AOB: E8 ? ? ? ? 8B 05 ? ? ? ? 8B 0D ? ? ? ? 85 ]  [ Source AOB: E8 ? ? ? ? 8B 15 ? ? ? ? 85 D2 75 ]
+        
+        /*
+            -
+        */
+        static unsigned int o_recompileNextInstruction;                                 //  
+        typedef void(__fastcall* recompileNextInstruction_stub)(bool, bool);            //  xref "Applying Dynamic Patch to address 0x%08X"
+        
         /*
             -   
         */
@@ -46,8 +52,10 @@ namespace PlayStation2
             //  .text:0000000140269D96                 mov     r15d, cs:dword_142EA809C 
             //  v3 = dword_142EA809C;           // psxRegs.code // 0x20C
         */
-        static psxRegisters* g_psxRegs;  
-        static __int32 g_psxpc;             //
+        static cpuRegisters* g_cpuRegs;     //      iR5900
+        static __int32 g_cpupc;             //      
+        static psxRegisters* g_psxRegs;     //      iR3000A
+        static __int32 g_psxpc;             //      
 
         //  DEPRECATED: pcsx2 1.6
     private:    //  ~

@@ -57,7 +57,10 @@ namespace PlayStation2
     
     public: //  METHODS
         static Memory*                  GetDefaultInstance();
-        static uintptr_t                GetBasePS2Address();   //  returns the module base of the game
+        static uintptr_t                GetBasePCSX2Address();                //  returns the module base of the game
+        static uintptr_t                GetPCSX2Addr(unsigned int offset);   //  returns the module base of the game
+        static uintptr_t                GetBasePS2Address();                //  returns the module base of the game
+        static uintptr_t                GetPS2Addr(unsigned int offset);    //  returns the module base of the game
         static bool                     ObtainProcessInfo(ProcessInfo& pInfo);
         static uintptr_t                GetPS2Address(unsigned int RAW_PS2_OFFSET);
         static uintptr_t                DereferencePtr(unsigned int RAW_PS2_OFFSET);
