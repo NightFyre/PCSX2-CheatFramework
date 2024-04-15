@@ -21,10 +21,9 @@ DWORD WINAPI Client(LPVOID hInstance)
     {
         g_running = true;
 
-        //  Get Debug Registers
+        ///  Get Debug Registers
         //  PlayStation2::PCSX2::o_cpuRegs = 0x0;
         //  PlayStation2::PCSX2::g_cpuRegs = reinterpret_cast<PlayStation2::cpuRegisters*>((PlayStation2::Memory::GetAddr(PlayStation2::PCSX2::o_cpuRegs) - 0x2AC));    //  [0x2AC is g_cpuRegs.code] The offset for cpuRegs found in recompileNextInstruction is displaced to the code offset in the structure
-
         //  PlayStation2::PCSX2::o_psxRegs = 0x0;
         //  PlayStation2::PCSX2::g_psxRegs = reinterpret_cast<PlayStation2::psxRegisters*>((PlayStation2::Memory::GetAddr(PlayStation2::PCSX2::o_psxRegs) - 0x20C));   //    similar to cpuRegs, the found offset is displaced and must be brought back to origin to access the data.
         

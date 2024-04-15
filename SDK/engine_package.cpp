@@ -58,7 +58,8 @@ namespace PlayStation2
     ///---------------------------------------------------------------------------------------------------
     // Template Initialization function
     //  NOTE: offsets will not always be correct
-    bool InitSDK() { return InitSDK("pcsx2-qt.exe", 0x3FA2728); }
+    //  NOTE2: PCSX2 v1.7.5617
+    bool InitSDK() { return InitSDK("pcsx2-qt.exe", PCSX2::o_gs_device); }
 
     ///---------------------------------------------------------------------------------------------------
     void ShutdownSDK()

@@ -16,7 +16,12 @@ namespace PlayStation2
         /*
             -   
         */
-        static unsigned int o_gs_device;                                                //  global pointer to GSDevice
+        static unsigned int o_gs_device;                                                //  global pointer to GSDevice  -> PCSX2 v1.7.5617: 0x3FA2728
+        
+        
+        /*
+            -
+        */
         static unsigned int o_GSDevice_GetRenderAPI;                                    //  offset to function  //  GSDevice::vfIndex [9]
         typedef RenderAPI(__fastcall* GSDevice_GetRenderAPI_stub)(GSDevice*);           //  Returns the graphics API used by this device.
 
@@ -29,14 +34,14 @@ namespace PlayStation2
         /*
             -   
         */
-        static unsigned int o_psxRecompileInstruction;                                  //  offset to function  
+        static unsigned int o_psxRecompileInstruction;                                  //  offset to function  ->  PCSX2 v1.7.5617: 0x269D80
         typedef void(__fastcall* psxRecompileNextInstruction_stub)(bool, bool);         //  [ Nightly AOB: E8 ? ? ? ? 8B 05 ? ? ? ? 8B 0D ? ? ? ? 85 ]  [ Source AOB: E8 ? ? ? ? 8B 15 ? ? ? ? 85 D2 75 ]
         
         /*
             -
         */
-        static unsigned int o_recompileNextInstruction;                                 //  
-        typedef void(__fastcall* recompileNextInstruction_stub)(bool, bool);            //  xref "Applying Dynamic Patch to address 0x%08X"
+        static unsigned int o_recompileNextInstruction;                                 //  offset to function  ->  PCSX2 v1.7.5617: 0x291CA0
+        typedef void(__fastcall* recompileNextInstruction_stub)(bool, bool);            //  AOB: [ Nightly AOB: E8 ? ? ? ? C7 44 24 ? ? ? ? ? 49 ]  [ Source AOB: ~ ] [ string: xref "Applying Dynamic Patch to address 0x%08X" ]
         
         /*
             -   
@@ -46,18 +51,30 @@ namespace PlayStation2
         static void ResetEE();                                                          //  helper function utilizing the offsets and prototype fn
 
         /*
-        
+
+            //  Function: recompileNextInstruction
+            //  AOB: [ Nightly AOB: E8 ? ? ? ? C7 44 24 ? ? ? ? ? 49 ]  [ Source AOB: ~ ]
+            //  .text:000000014029313B                 mov     cs:dword_142EA8F2C, eax
+            //  dword_142EA8F2C = v157;;           // cpuRegs.code // 0x2AC
+        */
+        static unsigned int o_cpuRegs;      //      offset  ->  PCSX2 v1.7.5617: 0x2EA8F2C
+        static cpuRegisters* g_cpuRegs;     //      iR5900
+        static __int32 g_cpupc;             //      offset  ->  PCSX2 v1.7.5617: 0      //  @TODO:have not determined a method for obtaining
+
+
+        /*
+
             //  Function: psxRecompileNextInstruction
             //  AOB: [ Nightly AOB: E8 ? ? ? ? 8B 05 ? ? ? ? 8B 0D ? ? ? ? 85 ]  [ Source AOB: E8 ? ? ? ? 8B 15 ? ? ? ? 85 D2 75 ]
-            //  .text:0000000140269D96                 mov     r15d, cs:dword_142EA809C 
+            //  .text:0000000140269D96                 mov     r15d, cs:dword_142EA809C
             //  v3 = dword_142EA809C;           // psxRegs.code // 0x20C
         */
-        static unsigned int o_cpuRegs;      //      PCSX2 v1.7.5617: 0x2EA8F2C
-        static cpuRegisters* g_cpuRegs;     //      iR5900
-        static __int32 g_cpupc;             //      
-        static unsigned int o_psxRegs;      //      PCSX2 v1.7.5617: 0x2EA809C
+        static unsigned int o_psxRegs;      //      offset  ->  PCSX2 v1.7.5617: 0x2EA809C
         static psxRegisters* g_psxRegs;     //      iR3000A
-        static __int32 g_psxpc;             //      
+        static __int32 g_psxpc;             //      offset  ->  PCSX2 v1.7.5617: 0      //  @TODO:have not determined a method for obtaining
+
+
+
 
         //  DEPRECATED: pcsx2 1.6
     private:    //  ~

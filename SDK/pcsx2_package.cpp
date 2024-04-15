@@ -11,7 +11,7 @@
 namespace PlayStation2
 {
     //  Class Offsets
-    unsigned int PCSX2::o_gs_device;        //  o_gs_device
+    unsigned int PCSX2::o_gs_device{ 0x3FA2728 };
     
     //  Fn Offsets
     unsigned int PCSX2::o_GSDevice_GetRenderAPI;
