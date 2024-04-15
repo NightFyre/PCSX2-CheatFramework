@@ -41,7 +41,7 @@ namespace PlayStation2
         /*
             -   
         */
-        static unsigned int o_recResetEE;                                               //  offset to function
+        static unsigned int o_recResetEE;                                               //  offset to function -> PCSX2 v1.7.5617: 0x2942C0
         typedef void(__fastcall* recResetEE_stub)();                                    //  [ Nightly AOB: 80 3D ?? ?? ?? ?? ?? 75 30 C6 05 ?? ?? ?? ?? ?? C6 ]  [ Source AOB: 80 3D ? ? ? ? ? 74 3D 80 ]
         static void ResetEE();                                                          //  helper function utilizing the offsets and prototype fn
 
@@ -52,8 +52,10 @@ namespace PlayStation2
             //  .text:0000000140269D96                 mov     r15d, cs:dword_142EA809C 
             //  v3 = dword_142EA809C;           // psxRegs.code // 0x20C
         */
+        static unsigned int o_cpuRegs;      //      PCSX2 v1.7.5617: 0x2EA8F2C
         static cpuRegisters* g_cpuRegs;     //      iR5900
         static __int32 g_cpupc;             //      
+        static unsigned int o_psxRegs;      //      PCSX2 v1.7.5617: 0x2EA809C
         static psxRegisters* g_psxRegs;     //      iR3000A
         static __int32 g_psxpc;             //      
 

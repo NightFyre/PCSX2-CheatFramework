@@ -22,7 +22,9 @@ namespace PlayStation2
 	
 	struct GPR_reg
 	{
-		char pad_0000[16];	//0x0000
+		//	char pad_0000[16];	//0x0000
+		__int32 n[4];
+
 	};	//Size: 0x0010
 
 	struct E_GPRRegs

@@ -54,37 +54,67 @@ namespace PlayStation2
 
     class Memory
     {
-    
-    public: //  METHODS
-        static Memory*                  GetDefaultInstance();
-        static uintptr_t                GetBasePCSX2Address();                //  returns the module base of the game
-        static uintptr_t                GetPCSX2Addr(unsigned int offset);   //  returns the module base of the game
-        static uintptr_t                GetBasePS2Address();                //  returns the module base of the game
-        static uintptr_t                GetPS2Addr(unsigned int offset);    //  returns the module base of the game
-        static bool                     ObtainProcessInfo(ProcessInfo& pInfo);
-        static uintptr_t                GetPS2Address(unsigned int RAW_PS2_OFFSET);
-        static uintptr_t                DereferencePtr(unsigned int RAW_PS2_OFFSET);
-        static uintptr_t                ResolvePtrChain(unsigned int RAW_PS2_OFFSET, std::vector<unsigned int> offsets = {});
-        static bool                     BytePatch(uintptr_t Address, BYTE* bytes, unsigned int size);
-        static bool                     NopBytes(uintptr_t Address, unsigned int size);
+    public:
+        template <typename T>
+        static inline T                 ReadMemoryEx(__int64 addr) 
+        { 
+            if (!addr)
+                return false;
 
+            return *(T*)addr; 
+        }
+        
+        template<typename T>
+        static inline bool              WriteMemoryEx(__int64 addr, T patch)
+        { 
+            if (!addr)
+                return false;
+
+            *(T*)addr = patch; 
+
+            return true;
+        }
+
+    public:
+        static Memory*                  GetDefaultInstance();
+        static __int64                  GetModuleBase();                            //  returns the module base of PCSX2 Process
+        static __int64                  GetAddr(unsigned int offset);               //  returns address offset from PCSX2 module base
+        static bool                     ObtainProcessInfo(ProcessInfo& pInfo);      //  resolves information on a windows process ( PID, Handle, BaseAddr & Base Game Window Information )
+        static __int64                  ResolvePtrChain(__int64 addr, std::vector<unsigned int> offsets = {});
+        static bool                     BytePatch(__int64 Address, BYTE* bytes, unsigned int size);
+        static bool                     NopBytes(__int64 Address, unsigned int size);
+
+    public:
+        Memory();
+        ~Memory();
+        
+        friend class PS2Memory;
+    
+    private:
+        static bool                     m_isInitialized;                                //  Set on first constructor call
+        static __int64                  dwGameBase;                                     //  Process Module Base
+        static __int64                  dwEEMem;                                        //  EEMem Pointer
+        static __int64                  BasePS2MemorySpace;                             //  EEMem Base Address
+        static ProcessInfo              Process;                                        //  Process Information Struct
+        static Memory*                  m_instance;                                     //  static class instance
+    };
+
+    class PS2Memory
+    {
+    public:
         ///---------------------------------------------------------------------------------------------------
         //	[MEMORY]
         // Takes Full Address
         // Make sure to resolve any offsets prior to running this function
         // NOTE: only reads last 4bytes
-        template<typename T> 
-        static inline T PS2Read(uintptr_t Address)
+        template<typename T>
+        static inline T                 Read(__int64 addr)
         {
-            /// USING FRAMERATE AS AN EXAMPLE
-            //0x7FF6B048CF60 0000001E0000001E   //  8   Bytes
-            //0x7FF6B048CF60 0000001E           //  4   Bytes
-            // Reformat Value from designated address
-            unsigned int format = *(int32_t*)Address;
+            //  4 byte alignment
+            unsigned int format = *(__int32*)addr;
 
-            T A{};
-            A = (T)format;
-            return A;
+            //  cast to type
+            return (T)(format);
         }
 
         ///---------------------------------------------------------------------------------------------------
@@ -92,27 +122,30 @@ namespace PlayStation2
         // Takes Full Address
         // Make sure to resolve any offsets prior to running this function
         // NOTE: only writes last 4bytes
-        template<typename T> 
-        static inline void PS2Write(uintptr_t Address, T Patch)
-        {
-            /// USING FRAMERATE AS AN EXAMPLE
-            //0x7FF6B048CF60 0000001E0000001E   //  8   Bytes
-            //0x7FF6B048CF60 0000001E           //  4   Bytes
-            // Reformat Value from designated address
-            *(T*)Address = Patch;
+        template<typename T>
+        static inline bool              Write(__int64 addr, T Patch)
+        { 
+            if (!addr)
+                return false;
+
+            *(T*)addr = Patch;
+        
+            return true;
         }
 
-    public:
-        Memory();
-        ~Memory();
+        template <typename T>
+        static inline T                 EzRead(__int32 offset) { return Read<T>(GetAddr(offset)); }
 
-    private:
-        static bool                     m_isInitialized;                                //  Set on first constructor call
-        static uintptr_t                dwGameBase;                                     //  Process Module Base
-        static uintptr_t                dwEEMem;                                        //  EEMem Pointer
-        static uintptr_t                BasePS2MemorySpace;                             //  EEMem Base Address
-        static ProcessInfo              Process;                                        //  Process Information Struct
-        static Memory*                  m_instance;                     //  static class instance
+        template <typename T>
+        static inline bool              EzWrite(__int32 offset, T patch) { return Write(GetAddr(offset), patch); }
+
+
+    public:
+        static __int64                  GetModuleBase();                    //  returns the module base of the game
+        static __int64                  GetAddr(__int32 offset);            //  returns address offset from PS2 EE module base        
+        static __int64                  GetPtr(__int32 offset);             //  
+        static __int64                  ResolvePtrChain(__int32 base_offset, std::vector<__int32> offsets);
+
     };
 
     class Tools
@@ -144,7 +177,6 @@ namespace PlayStation2
         static class Console*           g_console;
         static class Engine*            g_engine;
         static class Memory*            g_memory;
-    
     };
 
 }

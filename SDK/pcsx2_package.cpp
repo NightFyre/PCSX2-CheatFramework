@@ -11,7 +11,7 @@
 namespace PlayStation2
 {
     //  Class Offsets
-    unsigned int PCSX2::o_gs_device;
+    unsigned int PCSX2::o_gs_device;        //  o_gs_device
     
     //  Fn Offsets
     unsigned int PCSX2::o_GSDevice_GetRenderAPI;
@@ -34,13 +34,15 @@ namespace PlayStation2
     {
         if (!o_recResetEE)
         {
-            // @TODO: print error
+            Console::cLogMsg("[!] Failed to Reset EE/iR5900 Recompiler ->\t'o_recResetEE was nullptr'\n", EConsoleColors::dark_red);
             return;
         }
 
-        static recResetEE_stub fn = reinterpret_cast<recResetEE_stub>(Memory::GetPCSX2Addr(o_recResetEE)); //  @TODO: provide method for obtaining function pointer
+        static recResetEE_stub fn = reinterpret_cast<recResetEE_stub>(Memory::GetAddr(o_recResetEE)); //  @TODO: provide method for obtaining function pointer
 
         fn();
+    
+        Console::cLogMsg("[+] EE/iR5900 Recompiler Reset\n", EConsoleColors::dark_gray);
     }
 
     //----------------------------------------------------------------------------------------------------

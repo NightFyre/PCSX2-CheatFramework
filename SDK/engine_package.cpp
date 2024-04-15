@@ -38,7 +38,7 @@ namespace PlayStation2
         if (!pHand)
             return result;
 
-        CGlobals::g_gs_device = reinterpret_cast<GSDevice*>(*(__int64*)(Memory::GetPCSX2Addr(gDevice)));
+        CGlobals::g_gs_device = reinterpret_cast<GSDevice*>(*(__int64*)(Memory::GetAddr(gDevice)));
         if (!CGlobals::g_gs_device)
             return false;
 
@@ -48,7 +48,7 @@ namespace PlayStation2
 
         Console::LogMsg("[+] PCSX2 Framework Client Initialized!\nmodBase:\t0x%llX\nPS2ModBase:\t0x%llX\ng_gs_device:\t0x%llX\nRenderAPI:\t%d\n", 
             (__int64)pHand,
-            Memory::GetBasePS2Address(), 
+            PS2Memory::GetModuleBase(), 
             CGlobals::g_gs_device, 
             GSDevice::GetRenderAPI()
         );
@@ -90,6 +90,7 @@ namespace PlayStation2
     HANDLE                  Console::m_pPipe;
     bool                    Console::m_isConsoleAllocated{ false };
     bool                    Console::m_isVisible{ true };
+    std::mutex              Console::m_mutex;
     Console*                Console::m_instance = new Console();
 
     ///---------------------------------------------------------------------------------------------------
@@ -146,6 +147,10 @@ namespace PlayStation2
     //---------------------------------------------------------------------------------------------------
     void Console::LogMsgEx(FILE* stream, HANDLE pHand, const char* msg, EConsoleColors color, va_list args)
     {
+        if (!m_isConsoleAllocated)                                          //  only write when console is allocated
+            return;
+
+        std::lock_guard<std::mutex> lock(m_mutex);                          //  thread safety
         SetConsoleTextAttribute(pHand, color);					            //	Set output text color
         vfprintf(stream, msg, args);								        //	print
         SetConsoleTextAttribute(pHand, EConsoleColors::DEFAULT);	        //	Restore output text color to default
@@ -170,7 +175,7 @@ namespace PlayStation2
             return;
 
         va_list args;												        //	declare arguments
-        va_start(args, text);										        //	get arguments
+        va_start(args, color);										        //	get arguments
         LogMsgEx(m_pOutStream, m_pHandle, text, color, args);		        //	print
         va_end(args);												        //	clear arguments
     }
@@ -223,12 +228,12 @@ namespace PlayStation2
 
     //----------------------------------------------------------------------------------------------------
     //  STATICS
-    uintptr_t                Memory::dwGameBase;                                     
-    uintptr_t                Memory::dwEEMem;                                        
-    uintptr_t                Memory::BasePS2MemorySpace;                             
-    ProcessInfo              Memory::Process;                                        
-    bool                     Memory::m_isInitialized;                
-    Memory*                  Memory::m_instance = new Memory();
+    __int64                     Memory::dwGameBase;
+    __int64                     Memory::dwEEMem;
+    __int64                     Memory::BasePS2MemorySpace;
+    ProcessInfo                 Memory::Process;                                        
+    bool                        Memory::m_isInitialized;                
+    Memory*                     Memory::m_instance = new Memory();
 
     //----------------------------------------------------------------------------------------------------
     //  CONSTRUCTORS
@@ -239,9 +244,9 @@ namespace PlayStation2
 
         if (ObtainProcessInfo(Process))
         {
-            Memory::dwGameBase          = (uintptr_t)Process.m_ModuleBase;
-            Memory::dwEEMem             = (uintptr_t)GetProcAddress((HMODULE)Process.m_ModuleHandle, "EEmem");
-            Memory::BasePS2MemorySpace  = *(uintptr_t*)dwEEMem;
+            Memory::dwGameBase          = (__int64)Process.m_ModuleBase;
+            Memory::dwEEMem             = (__int64)GetProcAddress((HMODULE)Process.m_ModuleHandle, "EEmem");
+            Memory::BasePS2MemorySpace  = *(__int64*)dwEEMem;
             m_isInitialized = true;
         }
     }
@@ -252,16 +257,10 @@ namespace PlayStation2
     Memory* Memory::GetDefaultInstance() { return m_instance; }
 
     ///---------------------------------------------------------------------------------------------------
-    uintptr_t Memory::GetBasePCSX2Address() { return dwGameBase; }
+    __int64 Memory::GetModuleBase() { return dwGameBase; }
 
     ///---------------------------------------------------------------------------------------------------
-    uintptr_t Memory::GetPCSX2Addr(unsigned int offset) { return dwGameBase + offset; }
-
-    ///---------------------------------------------------------------------------------------------------
-    uintptr_t Memory::GetBasePS2Address() { return BasePS2MemorySpace; }
-
-    ///---------------------------------------------------------------------------------------------------
-    uintptr_t Memory::GetPS2Addr(unsigned int offset) { return BasePS2MemorySpace + offset; }
+    __int64 Memory::GetAddr(unsigned int offset) { return dwGameBase + offset; }
 
     ///---------------------------------------------------------------------------------------------------
     bool Memory::ObtainProcessInfo(ProcessInfo& pInfo)
@@ -312,42 +311,24 @@ namespace PlayStation2
 
     ///---------------------------------------------------------------------------------------------------
     //	[MEMORY]
-    // Converts shortened RAW PS2 format address to x64 address
-    // EXAMPLE:
-    // - Original RAW  : 2048D548  
-    // - Shortened RAW : 0x48D548
-    // - Base Memory   : 7FF660000000
-    // - Result        : 7FF660000000 + 0x48D548 = 7FF66048D548
-    uintptr_t Memory::GetPS2Address(unsigned int RAW_PS2_OFFSET) { return (Memory::BasePS2MemorySpace + RAW_PS2_OFFSET); }
-
-    ///---------------------------------------------------------------------------------------------------
-    //	[MEMORY]
-    // Assigns Shortened RAW PS2 Format Code to Class Pointer
-    // <returns>ClassPointer</returns>
-    // Note: Must be a base address
-    // - CPlayer
-    // - CCamera
-    uintptr_t Memory::DereferencePtr(unsigned int RAW_PS2_OFFSET) { return *(int32_t*)(RAW_PS2_OFFSET + Memory::BasePS2MemorySpace) + Memory::BasePS2MemorySpace; }
-
-    ///---------------------------------------------------------------------------------------------------
-    //	[MEMORY]
     // Resolves Pointer Chain from input Shorthand RAW PS2 Format Address
     // <returns></returns>
-    uintptr_t Memory::ResolvePtrChain(unsigned int RAW_PS2_OFFSET, std::vector<unsigned int> offsets)
+    __int64 Memory::ResolvePtrChain(__int64 addr, std::vector<unsigned int> offsets)
     {
         //  --
-        uintptr_t addr = (*(int32_t*)GetPS2Address(RAW_PS2_OFFSET)) + BasePS2MemorySpace;
-        if (offsets.empty())
-            return addr;
-
-        // --- untested (possibly not needed anyways, should work)
-        // GetClassPtr and relevent functions within each class will make this useless
-        for (int i = 0; i < offsets.size(); i++)
-        {
-            addr = *(int32_t*)addr;
-            addr += (offsets[i] + BasePS2MemorySpace);
-        }
-        return addr;
+        //  uintptr_t addr = (*(int32_t*)GetPS2Addr(RAW_PS2_OFFSET)) + Memory::BasePS2MemorySpace;
+        //  if (offsets.empty())
+        //      return addr;
+        //  
+        //  // --- untested (possibly not needed anyways, should work)
+        //  // GetClassPtr and relevent functions within each class will make this useless
+        //  for (int i = 0; i < offsets.size(); i++)
+        //  {
+        //      addr = *(int32_t*)addr;
+        //      addr += (offsets[i] + Memory::BasePS2MemorySpace);
+        //  }
+        //  return addr;
+        return 0;
     }
 
     ///---------------------------------------------------------------------------------------------------
@@ -355,7 +336,7 @@ namespace PlayStation2
     // Write Assembly patches to desired location
     // <returns>TRUE if operation is a success, otherwise result is FALSE</returns>
     // Note: resolve any offsets prior to running this function.
-    bool Memory::BytePatch(uintptr_t Address, BYTE* bytes, unsigned int size)
+    bool Memory::BytePatch(__int64 Address, BYTE* bytes, unsigned int size)
     {
         DWORD oldprotect;
         auto status = VirtualProtect(reinterpret_cast<void*>(Address), size, PAGE_EXECUTE_READWRITE, &oldprotect);
@@ -371,7 +352,7 @@ namespace PlayStation2
     //	[MEMORY]
     // Write NOP opcodes for desired size at the set destination
     // <returns>TRUE if operation is a success, otherwise result is FALSE</returns>
-    bool Memory::NopBytes(uintptr_t Address, unsigned int size)
+    bool Memory::NopBytes(__int64 Address, unsigned int size)
     {
         DWORD oldprotect;
         auto status = VirtualProtect(reinterpret_cast<void*>(Address), size, PAGE_EXECUTE_READWRITE, &oldprotect);
@@ -383,6 +364,58 @@ namespace PlayStation2
         return TRUE;
     }
 
+
+    //----------------------------------------------------------------------------------------------------
+    //										PS2Memory
+    //-----------------------------------------------------------------------------------
+
+
+    ///---------------------------------------------------------------------------------------------------
+    __int64 PS2Memory::GetModuleBase() { return Memory::BasePS2MemorySpace; }
+
+    ///---------------------------------------------------------------------------------------------------
+    //	[MEMORY]
+    // Converts shortened RAW PS2 format address to x64 address
+    // EXAMPLE:
+    // - Original RAW  : 20123456  
+    // - Shortened RAW : 0x123456
+    // - Base Memory   : 7FF660000000
+    // - Result        : 7FF660000000 + 0x123456 = 7FF660123456
+    __int64 PS2Memory::GetAddr(__int32 offset) { return Memory::BasePS2MemorySpace + offset; }
+
+    ///---------------------------------------------------------------------------------------------------
+    //	[MEMORY]
+    // Assigns Shortened RAW PS2 Format Code to Class Pointer
+    // <returns>ClassPointer</returns>
+    // Note: Must be a base address
+    // - CPlayer
+    // - CCamera
+    __int64 PS2Memory::GetPtr(__int32 offset)
+    {
+        return *(int32_t*)(offset + Memory::BasePS2MemorySpace) + Memory::BasePS2MemorySpace;
+    }
+
+
+    ///---------------------------------------------------------------------------------------------------
+    //	[MEMORY]
+    // Resolves Pointer Chain from input Shorthand RAW PS2 Format Address
+    // <returns></returns>
+    __int64 PS2Memory::ResolvePtrChain(__int32 RAW_PS2_OFFSET, std::vector<__int32> offsets)
+    {
+        //  --
+        uintptr_t addr = (*(int32_t*)GetAddr(RAW_PS2_OFFSET)) + Memory::BasePS2MemorySpace;
+        if (offsets.empty())
+            return addr;
+
+        // --- untested (possibly not needed anyways, should work)
+        // GetClassPtr and relevent functions within each class will make this useless
+        for (int i = 0; i < offsets.size(); i++)
+        {
+            addr = *(int32_t*)addr;
+            addr += (offsets[i] + Memory::BasePS2MemorySpace);
+        }
+        return addr;
+    }
 
     //----------------------------------------------------------------------------------------------------
 	//										TOOLS

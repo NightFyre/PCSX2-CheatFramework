@@ -25,5 +25,5 @@
 
 // Custom Game Packages 
 // - review readme and examples for better understanding with including a game package.
-//	#include "SDK/GamePackage/SOCOM1/SOCOM1_package.h"
+//	#include "SDK/GamePackages/SOCOM1/SOCOM1_package.h"
 //	#include "SDK/GamePackage/SlyCooper1/SlyCooper_Package.h"
