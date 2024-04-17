@@ -56,7 +56,7 @@ DWORD WINAPI MainThread(LPVOID hInstance)
         do
         {
             //  Exit Key
-            if (GetAsyncKeyState(VK_END) & 1)
+            if (GetAsyncKeyState(VK_END) & 0x8000)
                 g_running = false;
 
         } while (g_running);
