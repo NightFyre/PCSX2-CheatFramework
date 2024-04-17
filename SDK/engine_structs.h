@@ -238,17 +238,17 @@ namespace PlayStation2
 
 	struct ProcessInfo
 	{
-		DWORD		m_ModulePID{};
-		HANDLE		m_ModuleHandle{};
-		uintptr_t	m_ModuleBase{};
+		DWORD			m_ModulePID{};
+		HANDLE			m_ModuleHandle{};
+		uintptr_t		m_ModuleBase{};
 
-		HWND		m_GameWindow{};
-		LPCSTR		m_WindowTitle;
-		LPCSTR		m_ClassName;
-		LPCSTR		m_ModulePath;
-		int			m_WindowWidth;
-		int			m_WindowHeight;
-		Vector2		m_WindowSize{};
+		HWND			m_GameWindow{};
+		std::string		m_WindowTitle;
+		std::string		m_ClassName;
+		std::string		m_ModulePath;
+		int				m_WindowWidth;
+		int				m_WindowHeight;
+		Vector2			m_WindowSize{};
 	};
 
 	enum EConsoleColors : int 

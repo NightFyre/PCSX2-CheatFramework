@@ -48,7 +48,6 @@ namespace PlayStation2
     public:
         Console();
         Console(const char* title);
-        ~Console();
 
     private:
         static FILE*                    m_pInStream;		            //  Console Text Input Stream

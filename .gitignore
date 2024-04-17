@@ -6,13 +6,6 @@ release/
 x86/
 x64/
 
-# exclude external libraries
 *.rcnet
-GamePackages/
-
 # exclude personal settings
-dllmain.cpp
-*.sln
-*.vcxproj
-*.vcxproj.filters
-*.vcxproj.user
+*.code-workspace
