@@ -9,6 +9,31 @@
 #pragma pack(push, 0x01)
 namespace PlayStation2
 {
+    class CGlobals
+    {
+    public:
+
+        /*
+            AOB: 
+        */
+        static class GSRenderer*        g_gs_renderer;
+
+        /*
+            AOB: 48 8B 0D ? ? ? ? 48 85 C9 74 20
+        */
+        static class GSDevice*          g_gs_device;
+
+        /*
+            AOB:
+        */
+        static class EmuThread*         g_emu_thread;
+
+        //  
+        static class Console*           g_console;
+        static class Engine*            g_engine;
+        static class Memory*            g_memory;
+    };
+
     //  @TODO: hook pcsx2 console update function for thread context & use pcsx2 console for output.
     //  bool (__fastcall* ConsoleWriteLine)(ConsoleColor, const char*, ...);
     class Console
@@ -102,81 +127,150 @@ namespace PlayStation2
     class PS2Memory
     {
     public:
-        ///---------------------------------------------------------------------------------------------------
-        //	[MEMORY]
-        // Takes Full Address
-        // Make sure to resolve any offsets prior to running this function
-        // NOTE: only reads last 4bytes
+
+        /*
+            Summary: takes an input long address and reads its value
+            Notes:
+                -   'long' in this sense would be the physical address in memory such as '00007FF6C194DC00'
+
+            Example Usage: Get float Position of Object
+                -   PS2Memory::ReadLong<float>(address);
+            
+            Example Usage: Get Vector3 Position of Object
+                -   PS2Memory::ReadLong<Vector3>(address)
+        */
         template<typename T>
-        static inline T                 Read(__int64 addr)
-        {
-            //  4 byte alignment
-            unsigned int format = *(__int32*)addr;
+        static inline T                 ReadLong(__int64 addr) { return *(T*)(addr); }
 
-            //  cast to type
-            return (T)(format);
-        }
 
-        ///---------------------------------------------------------------------------------------------------
-        //	[MEMORY]
-        // Takes Full Address
-        // Make sure to resolve any offsets prior to running this function
-        // NOTE: only writes last 4bytes
+        /*
+            Summary: takes an input long address and writes a new value
+            Notes:
+                -   'short' in this sense would be the game offset such as'0x4899F0'
+
+            Example Usage: Write new float Position of Object
+                -   PS2Memory::WriteLong<float>(offset, patch);
+
+            Example Usage: Write new Vector3 Position of Object
+                -   PS2Memory::WriteLong<Vector3>(offset, patch)
+        */
         template<typename T>
-        static inline bool              Write(__int64 addr, T Patch)
-        { 
-            if (!addr)
-                return false;
-
-            *(T*)addr = Patch;
+        static inline void              WriteLong(__int64 addr, T Patch) { *(T*)addr = Patch; }
         
-            return true;
+        /*
+            Summary: takes an input short offset , transforms it to an address in memory and reads its value
+            Notes:
+                -   'short' in this sense would be the game offset such as'0x4899F0'
+
+            Example Usage: Get float Position of Object
+                -   PS2Memory::ReadShort<float>(offset);
+
+            Example Usage: Get Vector3 Position of Object
+                -   PS2Memory::ReadShort<Vector3>(offset)
+        */
+        template <typename T>
+        static inline T                 ReadShort(__int32 offset)  { return ReadLong<T>(GetAddr(offset)); }
+
+        /*
+            Summary: takes an input short offset , transforms it to an address in memory and writes a new value
+            Notes:
+                -   'short' in this sense would be the game offset such as'0x4899F0'
+
+            Example Usage: write new float Position of Object
+                -   PS2Memory::WriteShort<float>(offset, patch);
+
+            Example Usage: Write new Vector3 Position of Object
+                -   PS2Memory::WriteShort<Vector3>(offset, patch)
+        */
+        template <typename T>
+        static inline bool              WriteShort(__int32 offset, T patch) { return WriteLong<T>(GetAddr(offset), patch); }
+
+        //  takes an input long address , reads the value and casts it to a class pointer
+        template <typename T>
+        static inline T                GetPtrLong(long long address)
+        {
+            return reinterpret_cast<T>(GetModuleBase() + ReadLong<__int32>(address));
         }
 
+        //  takes an input short offset , transforms it to an address in memory, reads its value and casts it to a class pointer 
         template <typename T>
-        static inline T                 EzRead(__int32 offset) { return Read<T>(GetAddr(offset)); }
-
-        template <typename T>
-        static inline bool              EzWrite(__int32 offset, T patch) { return Write(GetAddr(offset), patch); }
+        static inline T                GetPtrShort(__int32 offset)
+        {
+            return reinterpret_cast<T>(GetModuleBase() + ReadShort<__int32>(offset));
+        }
 
 
     public:
-        static __int64                  GetModuleBase();                    //  returns the module base of the game
-        static __int64                  GetAddr(__int32 offset);            //  returns address offset from PS2 EE module base        
-        static __int64                  GetPtr(__int32 offset);             //  
+        static __int64                  GetModuleBase();                    //  obtain PS2 EE memory base address. 00007FF6C0000000 
+        static __int64                  GetAddr(__int32 offset);            //  transform offset to physical address. 0x44D648 -> 00007FF6C44D648      
         static __int64                  ResolvePtrChain(__int32 base_offset, std::vector<__int32> offsets);
-
     };
 
     class Tools
     {
     public:
-        static float GetDistanceTo3DObject(Vector3 POS, Vector3 POS2);
-    };
-   
-    class CGlobals
-    {
+        
+        class CPUTimer
+        {
+        public:
+            //  Enumeration for specifying different timing units
+            enum class ETimings
+            {
+                ETiming_MS,     //  millisecond
+                ETiming_S,      //  second
+                ETiming_M,      //  minute
+                ETiming_HR,     //  hour
+            };
+
+        public:
+            //  Start the timer
+            void                        Start() { m_start = clock(); }
+
+            //  Stop the timer
+            void                        Stop() { m_end = clock(); }
+
+            //  Reset the timer to start again
+            void                        Reset() { Start(); }
+
+            //  return the elapsed time in the specified unit
+            //  NOTE: timer is not stopped
+            double                      GetElapsedTime(clock_t time, ETimings t = ETimings::ETiming_MS) const
+            {
+                double res = static_cast<double>(time - m_start) / CLOCKS_PER_SEC;
+                switch (t)
+                {
+                    case ETimings::ETiming_MS: return res * 1000;
+                    case ETimings::ETiming_S: return res;
+                    case ETimings::ETiming_M: return res / 60;
+                    case ETimings::ETiming_HR: return res / 3600;
+                    default: return res;
+                }
+            }
+
+            // Stop the timer and 
+            double                      Stop(ETimings t) 
+            { 
+                m_end = clock(); 
+                return GetElapsedTime(m_end, t);
+            }
+
+        public:
+            CPUTimer() { Start(); }               // Constructor - starts the timer
+
+        private:
+            clock_t                     m_start;            // Start time of the timer
+            clock_t                     m_end{ 0 };         // End time of the timer
+        };
+
+        class Math3D
+        {
+            static float GetDistanceTo2DObject(Vector2 POS, Vector2 POS2);
+            static float GetDistanceTo3DObject(Vector3 POS, Vector3 POS2);
+        };
+
+        //  @NOTE: deprecate
     public:
-
-        /*
-            AOB: 
-        */
-        static class GSRenderer*        g_gs_renderer;
-
-        /*
-            
-            AOB: 48 8B 0D ? ? ? ? 48 85 C9 74 20
-        */
-        static class GSDevice*          g_gs_device;
-
-        /*
-        */
-        static class EmuThread*         g_emu_thread;
-
-        //  
-        static class Console*           g_console;
-        static class Engine*            g_engine;
-        static class Memory*            g_memory;
+        static float GetDistanceTo3DObject(Vector3 POS, Vector3 POS2);
     };
 
 }

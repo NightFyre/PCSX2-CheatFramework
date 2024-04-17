@@ -101,6 +101,8 @@ namespace PlayStation2
 			return *this;
 		}
 
+		bool operator==(Vector3 other) const { return other.x == x && other.y == y && other.z == z; }
+
 		// Length (magnitude) of the vector
 		float length() const { return std::sqrt(x * x + y * y + z * z); }
 

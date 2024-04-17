@@ -386,19 +386,6 @@ namespace PlayStation2
 
     ///---------------------------------------------------------------------------------------------------
     //	[MEMORY]
-    // Assigns Shortened RAW PS2 Format Code to Class Pointer
-    // <returns>ClassPointer</returns>
-    // Note: Must be a base address
-    // - CPlayer
-    // - CCamera
-    __int64 PS2Memory::GetPtr(__int32 offset)
-    {
-        return *(int32_t*)(offset + Memory::BasePS2MemorySpace) + Memory::BasePS2MemorySpace;
-    }
-
-
-    ///---------------------------------------------------------------------------------------------------
-    //	[MEMORY]
     // Resolves Pointer Chain from input Shorthand RAW PS2 Format Address
     // <returns></returns>
     __int64 PS2Memory::ResolvePtrChain(__int32 RAW_PS2_OFFSET, std::vector<__int32> offsets)
