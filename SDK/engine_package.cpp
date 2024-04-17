@@ -60,7 +60,7 @@ namespace PlayStation2
 
         CGlobals::g_memory = Memory::GetDefaultInstance();
 
-        Console::LogMsg("[+][%.3f] PCSX2 Cheat Device Initialized!\n- PCSX2:\t0x%llX\n- PS2:\t0x%llX\n- GSDevice:\t0x%llX\n- RenderAPI:\t%d\n",
+        Console::LogMsg("[+][%.3f] PCSX2 Cheat Device Initialized!\n- PCSX2:\t0x%llX\n- PS2:\t\t0x%llX\n- GSDevice:\t0x%llX\n- RenderAPI:\t%d\n\n",
             t.Stop(Tools::CPUTimer::ETimings::ETiming_MS),
             (__int64)pHand,
             PS2Memory::GetModuleBase(), 
@@ -210,40 +210,6 @@ namespace PlayStation2
 #pragma region  //  ENGINE
 
     Engine* Engine::m_instance = new Engine();
-
-    ///---------------------------------------------------------------------------------------------------
-    //  D3D Template Hook
-    bool Engine::D3D11HookPresent(IDXGISwapChain* p, void* ofnc, void* nFnc)
-    {
-        if (GSDevice::GetRenderAPI() != RenderAPI::D3D11)
-            return false;
-
-        // Get GS Device
-        auto d3d11 = static_cast<GSDevice11*>(CGlobals::g_gs_device);
-        if (!d3d11)
-            return false;
-
-        //  Get SwapChain
-        p = d3d11->GetSwapChain();
-        if (!p)
-            return false;
-
-        // Hook
-        hkVFunction(p, 8, ofnc, nFnc);
-
-        return true;
-    }
-
-    ///---------------------------------------------------------------------------------------------------
-    void Engine::D3D11UnHookPresent(IDXGISwapChain* p, void* ofnc)
-    {
-        if (!p)
-            return;
-
-        hkRestoreVFunction(p, 8, ofnc);
-        p = nullptr;
-        ofnc = 0;
-    }
 
     ///---------------------------------------------------------------------------------------------------
     Engine* Engine::GetDefaultInstance() { return m_instance; }

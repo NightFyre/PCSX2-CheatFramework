@@ -65,12 +65,9 @@ namespace PlayStation2
     class Engine
     {
     public:
-        typedef HRESULT(APIENTRY* IDXGISwapChainPresent)(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags);
     
     public:
         static Engine*                 GetDefaultInstance();
-        static bool                    D3D11HookPresent(IDXGISwapChain* p, void* ofnc, void* nFnc);                             //
-        static void                    D3D11UnHookPresent(IDXGISwapChain* p, void* ofnc);                                       //
 
     private:
         static Engine*                 m_instance;                     //  static class instance
