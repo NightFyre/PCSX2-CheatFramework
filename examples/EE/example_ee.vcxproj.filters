@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\SDK\engine_package.cpp">
+    <ClCompile Include="..\..\SDK\core_package.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\SDK\pcsx2_package.cpp">
@@ -26,6 +26,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\README.txt" />
+    <None Include="..\EXAMPLES.md" />
   </ItemGroup>
 </Project>

@@ -11,11 +11,11 @@ namespace PlayStation2
 	// --------------------------------------------------
 	// # Global functions
 	// --------------------------------------------------
-	bool InitSDK(const std::string& moduleName);
-	bool InitSDK(const std::string& moduleName, unsigned int gRenderer);
-	bool InitSDK();
-	void ShutdownSDK();
+	bool InitCDK(const std::string& moduleName);
+	bool InitCDK(const std::string& moduleName, unsigned int gRenderer);
+	bool InitCDK();
+	void ShutdownCDK();
 }
 
-#include "engine_Structs.h"
-#include "engine_Classes.h"
+#include "core_Structs.h"
+#include "core_Classes.h"

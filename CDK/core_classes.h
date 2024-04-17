@@ -10,24 +10,7 @@ namespace PlayStation2
 {
     class CGlobals
     {
-    public:
-
-        /*
-            AOB: 
-        */
-        static class GSRenderer*        g_gs_renderer;
-
-        /*
-            AOB: 48 8B 0D ? ? ? ? 48 85 C9 74 20
-        */
-        static class GSDevice*          g_gs_device;
-
-        /*
-            AOB:
-        */
-        static class EmuThread*         g_emu_thread;
-
-        //  
+    public: 
         static class Console*           g_console;
         static class Engine*            g_engine;
         static class Memory*            g_memory;

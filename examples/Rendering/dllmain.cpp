@@ -4,7 +4,7 @@
 static bool g_running;
 
 //---------------------------------------------------------------------------------------------------
-//  Initialize Client
+//  Declare Hook Variables
 static bool IsPrint{ false };
 IDXGISwapChain* pSwapChain;
 typedef HRESULT(APIENTRY* IDXGISwapChainPresent)(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags);
@@ -21,18 +21,18 @@ HRESULT APIENTRY hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT F
 }
 
 //---------------------------------------------------------------------------------------------------
-//  Initialize Client
+//  Initialize Client Thread
 DWORD WINAPI MainThread(LPVOID hInstance)
 {
 
 #if _DEBUG
 
-    MessageBoxA(NULL, "Initializing PCSX2 FrameWork", "DEBUG BUILD", MB_OK | MB_ICONINFORMATION);
+    MessageBoxA(NULL, "Initializing PCSX2 Cheat Device", "DEBUG BUILD", MB_OK | MB_ICONINFORMATION);
 
 #endif    
 
     //  initialize pcsx2 cheat dev kit
-    if (PlayStation2::InitSDK("pcsx2-qt.exe", PlayStation2::PCSX2::o_gs_device))
+    if (PlayStation2::InitCDK("pcsx2-qt.exe", PlayStation2::PCSX2::o_gs_device))
     {
 
 
@@ -41,7 +41,7 @@ DWORD WINAPI MainThread(LPVOID hInstance)
 
 
         // Get GS Device
-        auto d3d11 = static_cast<PlayStation2::GSDevice11*>(PlayStation2::CGlobals::g_gs_device);
+        auto d3d11 = static_cast<PlayStation2::GSDevice11*>(PlayStation2::PCSX2::g_gs_device);
         if (d3d11)
         {
             //  Get SwapChain & Hook
@@ -52,10 +52,10 @@ DWORD WINAPI MainThread(LPVOID hInstance)
 
         g_running = true;
 
-        //  Render Loop
+        //  Loop
         do
         {
-            //  Exit Key
+            //  Exit Module
             if (GetAsyncKeyState(VK_END) & 0x8000)
                 g_running = false;
 
@@ -66,7 +66,7 @@ DWORD WINAPI MainThread(LPVOID hInstance)
             PlayStation2::hkRestoreVFunction(pSwapChain, 8, oIDXGISwapChainPresent);
 
         //  cleanup
-        PlayStation2::ShutdownSDK(); 
+        PlayStation2::ShutdownCDK(); 
     }
 
     //  Exit

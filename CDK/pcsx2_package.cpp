@@ -30,9 +30,12 @@ namespace PlayStation2
     //----------------------------------------------------------------------------------------------------
     //  STATICS
     //  Class Offsets
+    EmuThread*                  PCSX2::g_emu_thread;
+    GSRenderer*                 PCSX2::g_gs_renderer;
     unsigned int                PCSX2::o_gs_device{ 0x3FA2728 };
     unsigned int                PCSX2::o_GSUpdateWindow;
     unsigned int                PCSX2::o_GSDevice_GetRenderAPI;
+    GSDevice*                   PCSX2::g_gs_device;
     unsigned int                PCSX2::o_psxRecompileInstruction{ 0x269D80 };
     unsigned int                PCSX2::o_recompileNextInstruction{ 0x291CA0 };
     unsigned int                PCSX2::o_recResetEE{ 0x2942C0 };
@@ -70,7 +73,7 @@ namespace PlayStation2
     //-----------------------------------------------------------------------------------
     RenderAPI GSDevice::GetRenderAPI()
     {
-        return CallVFunction<RenderAPI>(CGlobals::g_gs_device, 9);
+        return CallVFunction<RenderAPI>(PCSX2::g_gs_device, 9);
     }
 
 #pragma endregion

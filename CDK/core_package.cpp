@@ -14,7 +14,7 @@ namespace PlayStation2
     //-----------------------------------------------------------------------------------
 
     ///---------------------------------------------------------------------------------------------------
-    bool InitSDK(const std::string& moduleName)
+    bool InitCDK(const std::string& moduleName)
     {
         bool result{ false };
 
@@ -40,7 +40,8 @@ namespace PlayStation2
     }
 
     ///---------------------------------------------------------------------------------------------------
-    bool InitSDK(const std::string& moduleName, unsigned int gDevice)
+    //  Custom method for automatically initializing GSDevice
+    bool InitCDK(const std::string& moduleName, unsigned int gDevice)
     {
         bool result{ false };
 
@@ -50,8 +51,8 @@ namespace PlayStation2
         if (!pHand)
             return result;
 
-        CGlobals::g_gs_device = reinterpret_cast<GSDevice*>(*(__int64*)(Memory::GetAddr(gDevice)));
-        if (!CGlobals::g_gs_device)
+        PCSX2::g_gs_device = reinterpret_cast<GSDevice*>(*(__int64*)(Memory::GetAddr(gDevice)));
+        if (!PCSX2::g_gs_device)
             return false;
 
         CGlobals::g_console = Console::GetDefaultInstance();
@@ -64,7 +65,7 @@ namespace PlayStation2
             t.Stop(Tools::CPUTimer::ETimings::ETiming_MS),
             (__int64)pHand,
             PS2Memory::GetModuleBase(), 
-            CGlobals::g_gs_device, 
+            PCSX2::g_gs_device,
             GSDevice::GetRenderAPI()    //  @TODO: get string , its a virtual method . . .
         );
 
@@ -73,10 +74,10 @@ namespace PlayStation2
 
     ///---------------------------------------------------------------------------------------------------
     // Template Initialization function compatible with Nightly Builds
-    bool InitSDK() { return InitSDK("pcsx2-qt.exe"); }
+    bool InitCDK() { return InitCDK("pcsx2-qt.exe"); }
 
     ///---------------------------------------------------------------------------------------------------
-    void ShutdownSDK() { Console::DestroyConsole(); }
+    void ShutdownCDK() { Console::DestroyConsole(); }
 
     //----------------------------------------------------------------------------------------------------
     //										CGLOBALS
@@ -86,9 +87,6 @@ namespace PlayStation2
 
     //----------------------------------------------------------------------------------------------------
     //  STATICS
-    GSRenderer*             CGlobals::g_gs_renderer;
-    GSDevice*               CGlobals::g_gs_device;
-    EmuThread*              CGlobals::g_emu_thread;
     Console*                CGlobals::g_console;
     Engine*                 CGlobals::g_engine;
     Memory*                 CGlobals::g_memory;

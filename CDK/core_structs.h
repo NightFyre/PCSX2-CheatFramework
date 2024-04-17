@@ -1,5 +1,5 @@
 #pragma once
-#include "../SDK.h"
+#include "../CDK.h"
 
 /**
  * Name: PlayStation2 - PCSX2

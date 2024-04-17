@@ -6,18 +6,18 @@ static bool g_running;
 #define fn_start 0x0        //  should be function start address 
 
 //---------------------------------------------------------------------------------------------------
-//  Initialize Client
-DWORD WINAPI Client(LPVOID hInstance)
+//  Initialize Client Thread
+DWORD WINAPI MainThread(LPVOID hInstance)
 {
 
 #if _DEBUG
 
-    MessageBoxA(NULL, "Initializing PCSX2 FrameWork", "DEBUG BUILD", MB_OK | MB_ICONINFORMATION);
+    MessageBoxA(NULL, "Initializing PCSX2 Cheat Device", "DEBUG BUILD", MB_OK | MB_ICONINFORMATION);
 
 #endif    
 
     //  initialize pcsx2 cheat dev kit
-    if (PlayStation2::InitSDK())
+    if (PlayStation2::InitCDK())
     {
 
         ///  Get Debug Registers
@@ -31,7 +31,7 @@ DWORD WINAPI Client(LPVOID hInstance)
         //  Loop
         do
         {
-            //  Exit Key
+            //  Exit Module
             if (GetAsyncKeyState(VK_END) & 0x8000)
                 g_running = false;
          
@@ -67,7 +67,7 @@ DWORD WINAPI Client(LPVOID hInstance)
         } while (g_running);
         
         //  cleanup
-        PlayStation2::ShutdownSDK(); 
+        PlayStation2::ShutdownCDK(); 
     }
 
     //  Exit
@@ -87,7 +87,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  dwCallReason, LPVOID x)
         
         DisableThreadLibraryCalls(hModule);
         
-        HANDLE pHand = CreateThread(0, 0, Client, hModule, 0, 0);
+        HANDLE pHand = CreateThread(0, 0, MainThread, hModule, 0, 0);
     
         if (pHand)
             CloseHandle(pHand);

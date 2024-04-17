@@ -11,11 +11,15 @@ namespace PlayStation2
     class PCSX2
     {	
     public:
-        
+
+        static class GSRenderer* g_gs_renderer;
+        static class EmuThread* g_emu_thread;
+
         /*
             -   
         */
         static unsigned int o_gs_device;                                                //  global pointer to GSDevice  -> PCSX2 v1.7.5617: 0x3FA2728
+        static class GSDevice* g_gs_device;                                             //  AOB: 48 8B 0D ? ? ? ? 48 85 C9 74 20
         
         
         /*
