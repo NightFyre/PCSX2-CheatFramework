@@ -31,14 +31,17 @@ namespace PlayStation2
     //  STATICS
     //  Class Offsets
     unsigned int                PCSX2::o_gs_device{ 0x3FA2728 };
-    unsigned int                PCSX2::o_GSDevice_GetRenderAPI;
     unsigned int                PCSX2::o_GSUpdateWindow;
-    unsigned int                PCSX2::o_psxRecompileInstruction;
-    unsigned int                PCSX2::o_recResetEE;
+    unsigned int                PCSX2::o_GSDevice_GetRenderAPI;
+    unsigned int                PCSX2::o_psxRecompileInstruction{ 0x269D80 };
+    unsigned int                PCSX2::o_recompileNextInstruction{ 0x291CA0 };
+    unsigned int                PCSX2::o_recResetEE{ 0x2942C0 };
     cpuRegisters*               PCSX2::g_cpuRegs;
-    __int32                     PCSX2::g_cpupc;
+    __int32                     PCSX2::g_cpupc{ 0x0 };
+    unsigned int                PCSX2::o_cpuRegs{ 0x2EA8F2C };
     psxRegisters*               PCSX2::g_psxRegs;
-    __int32                     PCSX2::g_psxpc;
+    __int32                     PCSX2::g_psxpc{ 0x0 };
+    unsigned int                PCSX2::o_psxRegs{ 0x2EA809C };
 
     //-----------------------------------------------------------------------------------
     void PCSX2::ResetEE()
