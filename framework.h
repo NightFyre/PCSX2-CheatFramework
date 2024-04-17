@@ -9,3 +9,8 @@
 #include <memory>
 #include <atomic>
 #include <chrono>
+
+
+//	GAMEPAD
+#include <XInput.h>
+#pragma comment(lib, "XInput.lib")

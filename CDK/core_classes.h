@@ -175,6 +175,10 @@ namespace PlayStation2
     {
     public:
         
+        static bool                     GetKeyState(WORD v, SHORT delta);
+        static bool                     GamepadGetButtonState(WORD button);
+
+
         class CPUTimer
         {
         public:
@@ -206,6 +210,7 @@ namespace PlayStation2
         {
             static float GetDistanceTo3DObject(Vector3 POS, Vector3 POS2);
         };
+
     };
 
 }

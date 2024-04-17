@@ -408,6 +408,30 @@ namespace PlayStation2
 
 #pragma region  //  TOOLS
 
+    bool Tools::GetKeyState(WORD v, SHORT delta)
+    {
+        static int lastTick = 0;
+        
+        bool result = ((GetAsyncKeyState(v) & 0x8000) && (GetTickCount64() - lastTick) > delta);
+        
+        if (result)
+            lastTick = GetTickCount64();
+        
+        return result;
+    }
+
+    bool Tools::GamepadGetButtonState(WORD v)
+    {
+        XINPUT_STATE state;
+        ZeroMemory(&state, sizeof(XINPUT_STATE));
+        DWORD result = XInputGetState(0, &state);
+        if (result == ERROR_SUCCESS)
+        {
+            if ((state.Gamepad.wButtons & v) == v)
+                return true;
+        }
+        return false;
+    }
 
 #pragma endregion
 
