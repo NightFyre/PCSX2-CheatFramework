@@ -3,28 +3,12 @@
 
 /**
  * Name: PlayStation2 - PCSX2
- * Version: 0.0.1
+ * Version: 1.0.0
  * Author: NightFyre
 */
 
-#pragma pack(push, 0x01)
 namespace PlayStation2
 {
-
-    // --------------------------------------------------
-    // # Forwards
-    // --------------------------------------------------
-
-    /// PCSX2 Classes
-    GSRenderer*          CGlobals::g_gs_renderer;
-    GSDevice*            CGlobals::g_gs_device;
-    EmuThread*           CGlobals::g_emu_thread;
-    
-    ///  SDK Helpers
-    Console*             CGlobals::g_console;
-    Engine*              CGlobals::g_engine;
-    Memory*              CGlobals::g_memory;
-
     //----------------------------------------------------------------------------------------------------
     //										CORE
     //-----------------------------------------------------------------------------------
@@ -62,24 +46,30 @@ namespace PlayStation2
     bool InitSDK() { return InitSDK("pcsx2-qt.exe", PCSX2::o_gs_device); }
 
     ///---------------------------------------------------------------------------------------------------
-    void ShutdownSDK()
-    {
-        Console::DestroyConsole();
-    }
+    void ShutdownSDK() { }
 
-    ///---------------------------------------------------------------------------------------------------
-	unsigned int GetVtblOffset(void* czInstance, const char* dwModule)
-	{
-		uintptr_t moduleBase = (uintptr_t)GetModuleHandleA(NULL);
-		return ((*(unsigned int*)czInstance) - moduleBase);
-	}
+    //----------------------------------------------------------------------------------------------------
+    //										CGLOBALS
+    //-----------------------------------------------------------------------------------
 
-    ///---------------------------------------------------------------------------------------------------
-	int GetVtblIndex(void* fncPtr, void* vTblAddr) { return (((__int64)fncPtr - (__int64)vTblAddr) / sizeof(void*)) - 1; }
+#pragma region  //  CGLOBALS
+
+    //----------------------------------------------------------------------------------------------------
+    //  STATICS
+    GSRenderer*             CGlobals::g_gs_renderer;
+    GSDevice*               CGlobals::g_gs_device;
+    EmuThread*              CGlobals::g_emu_thread;
+    Console*                CGlobals::g_console;
+    Engine*                 CGlobals::g_engine;
+    Memory*                 CGlobals::g_memory;
+
+#pragma endregion
 
     //----------------------------------------------------------------------------------------------------
     //										CONSOLE
     //-----------------------------------------------------------------------------------
+
+#pragma region  //  CONSOLE
 
     ///---------------------------------------------------------------------------------------------------
     //  STATICS
@@ -126,6 +116,9 @@ namespace PlayStation2
         SetConsoleTitleA(title);                                            //  Set console window title
         m_isConsoleAllocated = true;
     }
+
+    ///---------------------------------------------------------------------------------------------------
+    Console::~Console() { DestroyConsole(); }
 
     ///---------------------------------------------------------------------------------------------------
     Console* Console::GetDefaultInstance() { return m_instance; }
@@ -181,9 +174,14 @@ namespace PlayStation2
         va_end(args);												        //	clear arguments
     }
 
+#pragma endregion
+
     //----------------------------------------------------------------------------------------------------
     //										ENGINE
     //-----------------------------------------------------------------------------------
+
+#pragma region  //  ENGINE
+
     Engine* Engine::m_instance = new Engine();
 
     ///---------------------------------------------------------------------------------------------------
@@ -223,9 +221,13 @@ namespace PlayStation2
     ///---------------------------------------------------------------------------------------------------
     Engine* Engine::GetDefaultInstance() { return m_instance; }
 
+#pragma endregion
+
     //----------------------------------------------------------------------------------------------------
 	//										MEMORY
 	//-----------------------------------------------------------------------------------
+
+#pragma region  //  MEMORY
 
     //----------------------------------------------------------------------------------------------------
     //  STATICS
@@ -365,11 +367,13 @@ namespace PlayStation2
         return TRUE;
     }
 
+#pragma endregion
 
     //----------------------------------------------------------------------------------------------------
-    //										PS2Memory
+    //									    PS2Memory
     //-----------------------------------------------------------------------------------
 
+#pragma region  //  PS2Memory
 
     ///---------------------------------------------------------------------------------------------------
     __int64 PS2Memory::GetModuleBase() { return Memory::BasePS2MemorySpace; }
@@ -405,15 +409,64 @@ namespace PlayStation2
         return addr;
     }
 
+#pragma endregion
+
     //----------------------------------------------------------------------------------------------------
 	//										TOOLS
 	//-----------------------------------------------------------------------------------
+
+#pragma region  //  TOOLS
+
+
+#pragma endregion
+
+    //----------------------------------------------------------------------------------------------------
+    //									TOOLS::CPUTimer
+    //-----------------------------------------------------------------------------------
+
+#pragma region  //  TOOLS::CPUTimer
+
+    Tools::CPUTimer::CPUTimer() { Start(); }
+
+    void Tools::CPUTimer::Start() { m_start = clock(); }
+
+    void Tools::CPUTimer::Stop() { m_end = clock(); }
+
+    void Tools::CPUTimer::Reset() { Start(); }
+
+    double Tools::CPUTimer::GetElapsedTime(clock_t time, ETimings t = ETimings::ETiming_MS) const
+    {
+        double res = static_cast<double>(time - m_start) / CLOCKS_PER_SEC;
+        switch (t)
+        {
+            case ETimings::ETiming_MS: return res * 1000;
+            case ETimings::ETiming_S: return res;
+            case ETimings::ETiming_M: return res / 60;
+            case ETimings::ETiming_HR: return res / 3600;
+            default: return res;
+        }
+    }
+
+    double Tools::CPUTimer::Stop(ETimings t)
+    {
+        m_end = clock();
+        return GetElapsedTime(m_end, t);
+    }
+
+#pragma endregion
+
+
+    //----------------------------------------------------------------------------------------------------
+    //									TOOLS::Math3D
+    //-----------------------------------------------------------------------------------
+
+#pragma region  //  TOOLS::Math3D
 
     ///---------------------------------------------------------------------------------------------------
     //	[TOOL]
     //	Gets distance from Position A to Position B
     // <returns>Vector3</returns>
-    float Tools::GetDistanceTo3DObject(Vector3 POS, Vector3 POS2)
+    float Tools::Math3D::GetDistanceTo3DObject(Vector3 POS, Vector3 POS2)
     {
         float x = (POS2.x - POS.x);
         float y = (POS2.y - POS.y);
@@ -421,5 +474,7 @@ namespace PlayStation2
         float distance = std::sqrt(x * x + y * y + z * z);
         return (distance);
     }
+
+#pragma endregion
+
 }
-#pragma pack(pop)

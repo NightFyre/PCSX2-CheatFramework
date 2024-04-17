@@ -11,7 +11,4 @@
 #include "framework.h"
 #include "SDK.h"
 
-
-using namespace std::chrono_literals;
-
 #endif //PCH_H

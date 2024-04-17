@@ -2,11 +2,10 @@
 
 /**
  * Name: PlayStation2 - PCSX2
- * Version: 0.0.1
+ * Version: 1.0.0
  * Author: NightFyre
 */
 
-#pragma pack(push, 0x01)
 namespace PlayStation2
 {
     class CGlobals
@@ -49,6 +48,7 @@ namespace PlayStation2
     public:
         Console();
         Console(const char* title);
+        ~Console();
 
     private:
         static FILE*                    m_pInStream;		            //  Console Text Input Stream
@@ -81,24 +81,10 @@ namespace PlayStation2
     {
     public:
         template <typename T>
-        static inline T                 ReadMemoryEx(__int64 addr) 
-        { 
-            if (!addr)
-                return false;
-
-            return *(T*)addr; 
-        }
+        static inline T                 ReadMemoryEx(__int64 addr) { return *(T*)addr; }
         
         template<typename T>
-        static inline bool              WriteMemoryEx(__int64 addr, T patch)
-        { 
-            if (!addr)
-                return false;
-
-            *(T*)addr = patch; 
-
-            return true;
-        }
+        static inline void              WriteMemoryEx(__int64 addr, T patch) { *(T*)addr = patch; }
 
     public:
         static Memory*                  GetDefaultInstance();
@@ -223,39 +209,14 @@ namespace PlayStation2
             };
 
         public:
-            //  Start the timer
-            void                        Start() { m_start = clock(); }
-
-            //  Stop the timer
-            void                        Stop() { m_end = clock(); }
-
-            //  Reset the timer to start again
-            void                        Reset() { Start(); }
-
-            //  return the elapsed time in the specified unit
-            //  NOTE: timer is not stopped
-            double                      GetElapsedTime(clock_t time, ETimings t = ETimings::ETiming_MS) const
-            {
-                double res = static_cast<double>(time - m_start) / CLOCKS_PER_SEC;
-                switch (t)
-                {
-                    case ETimings::ETiming_MS: return res * 1000;
-                    case ETimings::ETiming_S: return res;
-                    case ETimings::ETiming_M: return res / 60;
-                    case ETimings::ETiming_HR: return res / 3600;
-                    default: return res;
-                }
-            }
-
-            // Stop the timer and 
-            double                      Stop(ETimings t) 
-            { 
-                m_end = clock(); 
-                return GetElapsedTime(m_end, t);
-            }
+            void                        Start();            //  Start the timer
+            void                        Stop();             //  Stop the timer
+            void                        Reset();            //  Reset the timer to start again
+            double                      Stop(ETimings t);   // Stop the timer and 
+            double                      GetElapsedTime(clock_t time, ETimings t = ETimings::ETiming_MS) const;  //  return the elapsed time in the specified unit //  NOTE: timer is not stopped
 
         public:
-            CPUTimer() { Start(); }               // Constructor - starts the timer
+            CPUTimer();                                     // Constructor - starts the timer
 
         private:
             clock_t                     m_start;            // Start time of the timer
@@ -264,14 +225,8 @@ namespace PlayStation2
 
         class Math3D
         {
-            static float GetDistanceTo2DObject(Vector2 POS, Vector2 POS2);
             static float GetDistanceTo3DObject(Vector3 POS, Vector3 POS2);
         };
-
-        //  @NOTE: deprecate
-    public:
-        static float GetDistanceTo3DObject(Vector3 POS, Vector3 POS2);
     };
 
 }
-#pragma pack(pop)

@@ -3,31 +3,42 @@
 
 /**
  * Name: PlayStation2 - PCSX2
- * Version: 0.0.1
+ * Version: 1.0.0
  * Author: NightFyre
 */
 
-#pragma pack(push, 0x01)
 namespace PlayStation2
 {
-    //  Class Offsets
-    unsigned int PCSX2::o_gs_device{ 0x3FA2728 };
-    
-    //  Fn Offsets
-    unsigned int PCSX2::o_GSDevice_GetRenderAPI;
-    unsigned int PCSX2::o_GSUpdateWindow;
-    unsigned int PCSX2::o_psxRecompileInstruction;
-    unsigned int PCSX2::o_recResetEE;
 
-    //  Structures
-    cpuRegisters* PCSX2::g_cpuRegs;
-    __int32 PCSX2::g_cpupc;
-    psxRegisters* PCSX2::g_psxRegs;
-    __int32 PCSX2::g_psxpc;
+    //----------------------------------------------------------------------------------------------------
+    //										CORE
+    //-----------------------------------------------------------------------------------
+
+    ///---------------------------------------------------------------------------------------------------
+    unsigned int GetVtblOffset(void* czInstance, const char* dwModule) { return ((*(unsigned int*)czInstance) - Memory::GetModuleBase()); }
+
+    ///---------------------------------------------------------------------------------------------------
+    int GetVtblIndex(void* fncPtr, void* vTblAddr) { return (((__int64)fncPtr - (__int64)vTblAddr) / sizeof(void*)) - 1; }
+
 
     //----------------------------------------------------------------------------------------------------
     //										PCSX2
     //-----------------------------------------------------------------------------------
+
+#pragma region  //  PCSX2
+
+    //----------------------------------------------------------------------------------------------------
+    //  STATICS
+    //  Class Offsets
+    unsigned int                PCSX2::o_gs_device{ 0x3FA2728 };
+    unsigned int                PCSX2::o_GSDevice_GetRenderAPI;
+    unsigned int                PCSX2::o_GSUpdateWindow;
+    unsigned int                PCSX2::o_psxRecompileInstruction;
+    unsigned int                PCSX2::o_recResetEE;
+    cpuRegisters*               PCSX2::g_cpuRegs;
+    __int32                     PCSX2::g_cpupc;
+    psxRegisters*               PCSX2::g_psxRegs;
+    __int32                     PCSX2::g_psxpc;
 
     //-----------------------------------------------------------------------------------
     void PCSX2::ResetEE()
@@ -45,9 +56,13 @@ namespace PlayStation2
         Console::cLogMsg("[+] EE/iR5900 Recompiler Reset\n", EConsoleColors::dark_gray);
     }
 
+#pragma endregion
+
     //----------------------------------------------------------------------------------------------------
     //										GSDevice
     //-----------------------------------------------------------------------------------
+
+#pragma region  //  GSDevice
 
     //-----------------------------------------------------------------------------------
     RenderAPI GSDevice::GetRenderAPI()
@@ -55,12 +70,18 @@ namespace PlayStation2
         return CallVFunction<RenderAPI>(CGlobals::g_gs_device, 9);
     }
 
+#pragma endregion
+
     //----------------------------------------------------------------------------------------------------
-    //									GSDevice :: DirectX 11
+    //									GSDevice::GSDevice11
     //-----------------------------------------------------------------------------------
 
+#pragma region  //  GSDevice::GSDevice11
+
     bool GSDevice11::isValidSwapChain() { return m_swap_chain != nullptr; }
+    
     IDXGISwapChain* GSDevice11::GetSwapChain() { return m_swap_chain; }
+    
     ID3D11Device* GSDevice11::GetDevice() { return m_dev; }
 
     //-----------------------------------------------------------------------------------
@@ -72,11 +93,18 @@ namespace PlayStation2
         return desc;
     }
 
+#pragma endregion
+
     //----------------------------------------------------------------------------------------------------
-    //									GSDevice :: DirectX 12
+    //									GSDevice::GSDevice12
     //-----------------------------------------------------------------------------------
+
+#pragma region  //  GSDevice::GSDevice11
+
     bool GSDevice12::isValidSwapChain() { return m_swap_chain != nullptr; }
+
     IDXGISwapChain* GSDevice12::GetSwapChain() { return m_swap_chain; }
 
+#pragma endregion
+
 }
-#pragma pack(pop)

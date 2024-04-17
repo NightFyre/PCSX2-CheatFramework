@@ -3,11 +3,10 @@
 
 /**
  * Name: PlayStation2 - PCSX2
- * Version: 0.0.1
+ * Version: 1.0.0
  * Author: NightFyre
 */
 
-#pragma pack(push, 0x01)
 namespace PlayStation2
 {
 	enum class RenderAPI
@@ -63,7 +62,6 @@ namespace PlayStation2
 		GPR_reg ra;	//0x01F0
 	};	//Size: 0x0200
 
-
 	struct E_CP0regs
 	{
 		__int32 Index;		//0x0000
@@ -100,7 +98,6 @@ namespace PlayStation2
 		__int32 DESAVE;		//0x007C
 	};	//Size: 0x0080
 
-
 	struct PERFregs
 	{
 		unsigned int r[4];	//0x0000
@@ -110,6 +107,7 @@ namespace PlayStation2
 	/*
 		iR5900
 
+		comments & structures thanks to pcsx2 team
 	*/
 	struct cpuRegisters
 	{
@@ -136,7 +134,6 @@ namespace PlayStation2
 		__int32 lastCOP0Cycle;		//0x03E4
 		__int32 LastPERFCycle[2];	//0x03E8
 	};	//Size: 0x03F0
-
 
 	struct GPRRegs
 	{
@@ -270,7 +267,9 @@ namespace PlayStation2
 	};	//Size: 0x0080
 
 	/*
-		
+		iR3000A
+
+		comments & structures thanks to pcsx2 team
 	*/
 	struct psxRegisters
 	{
@@ -300,4 +299,3 @@ namespace PlayStation2
 		__int32 eCycle[32];			//	0x022C	//	 cycle delta for signaled ints
 	};	//Size: 0x021C
 }
-#pragma pack(pop)

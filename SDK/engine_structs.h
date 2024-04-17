@@ -3,11 +3,10 @@
 
 /**
  * Name: PlayStation2 - PCSX2
- * Version: 0.0.1
+ * Version: 1.0.0
  * Author: NightFyre
 */
 
-#pragma pack(push, 0x01)
 namespace PlayStation2
 {
 
@@ -273,4 +272,3 @@ namespace PlayStation2
 	};
 
 }
-#pragma pack(pop)

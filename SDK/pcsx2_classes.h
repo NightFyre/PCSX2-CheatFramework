@@ -2,11 +2,10 @@
 
 /**
  * Name: PlayStation2 - PCSX2
- * Version: 0.0.1
+ * Version: 1.0.0
  * Author: NightFyre
 */
 
-#pragma pack(push, 0x01)
 namespace PlayStation2
 {
     class PCSX2
@@ -84,20 +83,13 @@ namespace PlayStation2
 
     class GSRenderer
     {
+
     };
 
-    /*
-    
-        -
-    */
     class GSRendererHW
     {
     };
     
-    /*
-        
-        -   
-    */
     class GSDevice
     {
     private:
@@ -200,7 +192,6 @@ namespace PlayStation2
         IDXGISwapChain* GetSwapChain();
     };	//Size: 0x055C
 
-
     /*
         GSDeviceOGL : OpenGL Rendering API
         - 0x0 = vfTable
@@ -208,6 +199,15 @@ namespace PlayStation2
     class GSDeviceOGL : public GSDevice
     {
 
+    };
+
+    /*
+        GSDeviceMetal : Metal Rendering API
+        - 0x0 = vfTable
+    */
+    class GSDeviceMetal : public GSDevice
+    {
+        
     };
 
     /*
@@ -220,4 +220,3 @@ namespace PlayStation2
     };
 
 }
-#pragma pack(pop)
