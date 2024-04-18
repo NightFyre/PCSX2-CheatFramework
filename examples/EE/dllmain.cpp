@@ -1,5 +1,5 @@
 #pragma once
-#include "pch.h"
+#include "CDK.h"
 
 static bool g_running;
 
@@ -24,7 +24,7 @@ DWORD WINAPI MainThread(LPVOID hInstance)
         PlayStation2::PCSX2::g_cpuRegs = reinterpret_cast<PlayStation2::cpuRegisters*>((PlayStation2::Memory::GetAddr(PlayStation2::PCSX2::o_cpuRegs) - 0x2AC));    //  [0x2AC is g_cpuRegs.code] The offset for cpuRegs found in recompileNextInstruction is displaced to the code offset in the structure
         
         /// Reset Recompiler
-        PlayStation2::PCSX2::ResetEE();             //  Reset EE so that we can re/capture events
+        PlayStation2::ResetEE();             //  Reset EE so that we can re/capture events
 
         g_running = true;
 
@@ -40,7 +40,7 @@ DWORD WINAPI MainThread(LPVOID hInstance)
 
             //  Recompile EE , can be used to capture a functions compilation. May need to trigger an event of sorts in game. YMMV
             if (PlayStation2::Tools::GetKeyState(VK_HOME, 500))
-                PlayStation2::PCSX2::ResetEE();
+                PlayStation2::ResetEE();
 
             if (fn_start <= 0)
                 continue;

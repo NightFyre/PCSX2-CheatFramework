@@ -599,7 +599,7 @@ namespace PlayStation2
 	typedef void(__fastcall* recompileNextInstruction_stub)(bool, bool);            //  AOB: [ Nightly AOB: E8 ? ? ? ? C7 44 24 ? ? ? ? ? 49 ]  [ Source AOB: ~ ] [ string: xref "Applying Dynamic Patch to address 0x%08X" ]
 	typedef void(__fastcall* psxRecompileNextInstruction_stub)(bool, bool);         //  [ Nightly AOB: E8 ? ? ? ? 8B 05 ? ? ? ? 8B 0D ? ? ? ? 85 ]  [ Source AOB: E8 ? ? ? ? 8B 15 ? ? ? ? 85 D2 75 ]
 	typedef void(__fastcall* recResetEE_stub)();                                    //  [ Nightly AOB: 80 3D ?? ?? ?? ?? ?? 75 30 C6 05 ?? ?? ?? ?? ?? C6 ]  [ Source AOB: 80 3D ? ? ? ? ? 74 3D 80 ]
-	static void ResetEE();                                                          //  helper function utilizing the offsets and prototype fn
+	void ResetEE();																	//  helper function utilizing the offsets and prototype fn
 
 #pragma endregion
 
