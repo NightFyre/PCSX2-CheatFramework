@@ -19,7 +19,7 @@ This framework provides tools to port older codes to a more modern approach, usi
  - `CDK.cpp`                //  make sure to include the source file to your project , otherwise attempting to use any methods will result in an "unresolved external error"
 
 2. Initialize the Cheat Device
- - `PlayStation2::InitCDK();`   //  Basic CDK Initialization
+https://github.com/NightFyre/PCSX2-CheatFramework/blob/4bccdd509105c2238ac33f16fbafd11f3883dc44/CDK.h#L73-L74
 
 3. Do Stuff
 https://github.com/NightFyre/PCSX2-CheatFramework/blob/70dcf7dc51747df014f5d537a3188b8de1fe95a2/dllmain.cpp#L18-L29
