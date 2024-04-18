@@ -35,8 +35,8 @@ DWORD WINAPI MainThread(LPVOID hInstance)
             if (PlayStation2::Tools::GetKeyState(VK_END, 500))
                 g_running = false;
          
-            if (PlayStation2::PCSX2::o_recResetEE <= 0)
-                continue;
+            //  if (PlayStation2::PCSX2::o_recResetEE <= 0)
+            //      continue;
 
             //  Recompile EE , can be used to capture a functions compilation. May need to trigger an event of sorts in game. YMMV
             if (PlayStation2::Tools::GetKeyState(VK_HOME, 500))

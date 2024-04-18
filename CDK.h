@@ -365,9 +365,6 @@ namespace PlayStation2
     //  bool (__fastcall* ConsoleWriteLine)(ConsoleColor, const char*, ...);
     class Console
     {
-        //  Memory::GetAddr(0x56B0)
-        //  xref 
-        __int64(__fastcall* _IConsoleWriter_WriteLn_stub)(const char*, ...) = (decltype(_IConsoleWriter_WriteLn_stub))(0);
 
     public:
         static Console*                 GetDefaultInstance();
@@ -375,7 +372,7 @@ namespace PlayStation2
         static void                     LogMsg(const char* msg, ...);                                                                   //  Easily logs message to the console
         static void                     cLogMsg(const char* msg, EConsoleColors color, ...);                                            //  Logs a color message to the console
         static void                     ToggleViewState(bool isVisible);                                                                //  
-        static void                     DestroyConsole();                                                                               // Should be called at the end of program as part of cleanup , decontructor with static methods would just constantly deallocate the console. 
+        static void                     DestroyConsole();                                                                               //	Should be called at the end of program as part of cleanup , decontructor with static methods would just constantly deallocate the console. 
 
     public:
         Console();
@@ -459,6 +456,8 @@ namespace PlayStation2
         static bool                     NopBytes(__int64 Address, unsigned int size);
 		static unsigned int				GetVtblOffset(void* czInstance, const char* dwModule = NULL);
 		static int						GetVtblIndex(void* fncPtr, void* vTblAddr);
+		static __int64					SignatureScan(const char* sig);
+		static std::vector<int>			SignatureToBytes(const char* sig);
 
     public:
         Memory();
@@ -617,6 +616,48 @@ namespace PlayStation2
 
 #pragma region	//	PCSX2 STRUCTS & ENUMS
 
+
+	/*
+	* PCSX2 Source
+		Console.h - Ln 22
+	*/
+	enum PCSX2ConsoleColors
+	{
+		Color_Current = -1,
+
+		Color_Default = 0,
+
+		Color_Black,
+		Color_Green,
+		Color_Red,
+		Color_Blue,
+		Color_Magenta,
+		Color_Orange,
+		Color_Gray,
+
+		Color_Cyan,				// faint visibility, intended for logging PS2/IOP output
+		Color_Yellow,			// faint visibility, intended for logging PS2/IOP output
+		Color_White,			// faint visibility, intended for logging PS2/IOP output
+
+		// Strong text *may* result in mis-aligned text in the console, 
+		// depending on the font and the platform, so use these with caution.
+		Color_StrongBlack,
+		Color_StrongRed,		// intended for errors
+		Color_StrongGreen,		// intended for infrequent state information
+		Color_StrongBlue,		// intended for block headings
+		Color_StrongMagenta,
+		Color_StrongOrange,		// intended for warnings
+		Color_StrongGray,
+
+		Color_StrongCyan,
+		Color_StrongYellow,
+		Color_StrongWhite,
+
+		ConsoleColors_Count
+	};
+	static const PCSX2ConsoleColors DefaultConsoleColor = Color_Default;
+
+	//	
 	enum class RenderAPI
 	{
 		None,
@@ -921,25 +962,28 @@ namespace PlayStation2
 	class PCSX2
     {	
     public:
-
-        static unsigned int o_gs_device;                                                //  global pointer to GSDevice  -> PCSX2 v1.7.5617: 0x3FA2728
+        static unsigned int o_gs_device;                                                //  global pointer to GSDevice  -> PCSX2 v1.7.5617: 0x3FA2728	[ AOB: 48 8B 05 ? ? ? ? 83 78 ? ? 74 ? 8B 3D ]
         static class GSDevice* g_gs_device;                                             //  AOB: 48 8B 0D ? ? ? ? 48 85 C9 74 20
         
         //	function offsets
-		static unsigned int o_GSUpdateWindow;                                           //  offset to function  ->  GSDevice::vfIndex [12]
-        static unsigned int o_GSDevice_GetRenderAPI;                                    //  offset to function  ->  GSDevice::vfIndex [9]
+		static unsigned int o_GSUpdateDisplayWindow;                                    //  offset to function  ->  GSDevice::vfIndex [12]		[ AOB: 48 83 EC ? 48 8B 0D ? ? ? ? 48 8B 01 ]
+        static unsigned int o_GSDevice_GetRenderAPI;                                    //  offset to function  ->  GSDevice::vfIndex [9]		[ AOB: B8 ? ? ? ? C3 CC CC CC CC CC CC CC CC CC CC 41 57 41 56 41 55 ]
 		static unsigned int o_recompileNextInstruction;                                 //  offset to function  ->  PCSX2 v1.7.5617: 0x291CA0
         static unsigned int o_psxRecompileInstruction;                                  //  offset to function  ->  PCSX2 v1.7.5617: 0x269D80
         static unsigned int o_recResetEE;                                               //  offset to function	->	PCSX2 v1.7.5617: 0x2942C0
 
         /*
-
             //  Function: recompileNextInstruction
             //  AOB: [ Nightly AOB: E8 ? ? ? ? C7 44 24 ? ? ? ? ? 49 ]  [ Source AOB: ~ ]
             //  .text:000000014029313B                 mov     cs:dword_142EA8F2C, eax
             //  dword_142EA8F2C = v157;;           // cpuRegs.code // 0x2AC
+
+			
+			//	sub_118A0("Branch %x in delay slot!", v88); v88 = cpuRegs.code, sub_118A0 = DevCon.Warning, executing function = recompileNextInstruction
+			//	DevCon.Warning("Branch %x in delay slot!", cpuRegs.code);
+
         */
-        static unsigned int o_cpuRegs;      //      offset  ->  PCSX2 v1.7.5617: 0x2EA8F2C
+        static unsigned int o_cpuRegs;      //      offset  ->  PCSX2 v1.7.5617: 0x2EA8F2C	[ AOB: 8B 05 ? ? ? ? 89 C2 C1 EA ? 83 E2 ? 8D 4A ]
         static cpuRegisters* g_cpuRegs;     //      iR5900
         static __int32 g_cpupc;             //      offset  ->  PCSX2 v1.7.5617: 0      //  @TODO:have not determined a method for obtaining
 
@@ -950,18 +994,69 @@ namespace PlayStation2
             //  AOB: [ Nightly AOB: E8 ? ? ? ? 8B 05 ? ? ? ? 8B 0D ? ? ? ? 85 ]  [ Source AOB: E8 ? ? ? ? 8B 15 ? ? ? ? 85 D2 75 ]
             //  .text:0000000140269D96                 mov     r15d, cs:dword_142EA809C
             //  v3 = dword_142EA809C;           // psxRegs.code // 0x20C
+
+			//	sub_6820("psx: Unimplemented op %x", (unsigned int)dword_2EA809C); dword_2EA809C = psxRegs.code, sub
         */
-        static unsigned int o_psxRegs;      //      offset  ->  PCSX2 v1.7.5617: 0x2EA809C
+        static unsigned int o_psxRegs;      //      offset  ->  PCSX2 v1.7.5617: 0x2EA809C	[	AOB: 8B 05 ? ? ? ? A9 ? ? ? ? 74 ? 89 C1 C1 E9 ]
         static psxRegisters* g_psxRegs;     //      iR3000A
         static __int32 g_psxpc;             //      offset  ->  PCSX2 v1.7.5617: 0      //  @TODO:have not determined a method for obtaining
 
 		//	fn Prototypes
-		typedef __int64(__fastcall* GSUpdateDisplayWindow_stub)();                      //  [ Nightly AOB: 48 83 EC 48 48 8B 0D ? ? ? ? 48 ] [ Soource AOB: 48 83 EC 48 48 8B 0D ? ? ? ? 48 8B ]
-		typedef __int8(__fastcall* GSDevice_GetRenderAPI_stub)(class GSDevice*);        //  GSDevice Virtual Method #6 Returns the graphics API used by this device.
-		typedef void(__fastcall* recompileNextInstruction_stub)(bool, bool);            //  AOB: [ Nightly AOB: E8 ? ? ? ? C7 44 24 ? ? ? ? ? 49 ]  [ Source AOB: ~ ] [ string: xref "Applying Dynamic Patch to address 0x%08X" ]
-		typedef void(__fastcall* psxRecompileNextInstruction_stub)(bool, bool);         //  [ Nightly AOB: E8 ? ? ? ? 8B 05 ? ? ? ? 8B 0D ? ? ? ? 85 ]  [ Source AOB: E8 ? ? ? ? 8B 15 ? ? ? ? 85 D2 75 ]
-		typedef void(__fastcall* recResetEE_stub)();                                    //  [ Nightly AOB: 80 3D ?? ?? ?? ?? ?? 75 30 C6 05 ?? ?? ?? ?? ?? C6 ]  [ Source AOB: 80 3D ? ? ? ? ? 74 3D 80 ]
-		static void ResetEE();															//  helper function utilizing the offset and prototype fn
+		typedef __int64(__fastcall* GSUpdateDisplayWindow_stub)();								//  [ AOB: 48 83 EC ? 48 8B 0D ? ? ? ? 48 8B 01 ]
+		typedef __int8(__fastcall* GSDevice_GetRenderAPI_stub)(class GSDevice*);				//  GSDevice Virtual Method #6 Returns the graphics API used by this device.
+		typedef void(__fastcall* recompileNextInstruction_stub)(bool, bool);					//  [ AOB: 41 57 41 56 41 55 41 54 56 57 55 53 48 81 EC ? ? ? ? 0F 29 74 24 ? 88 54 24 ] [ string: xref "Applying Dynamic Patch to address 0x%08X" ]
+		typedef void(__fastcall* psxRecompileNextInstruction_stub)(bool, bool);					//  [ AOB: 41 57 41 56 41 55 41 54 56 57 55 53 48 81 EC ? ? ? ? 41 89 D5 44 8B 3D ]
+		typedef void(__fastcall* recResetEE_stub)();											//  [ AOB: 80 3D ? ? ? ? ? 75 ? C6 05 ? ? ? ? ? C6 05 ? ? ? ? ? 80 3D ]
+		typedef void(__fastcall* recResetIOP_stub)();											//  [ AOB: 41 57 41 56 41 55 41 54 56 57 55 53 48 83 EC ? 66 0F 7F 7C 24 ? 66 0F 7F 74 24 ? 49 BE ]
+		static void ResetEE();																	//  helper function utilizing the offset and prototype fn	@TODO::relocate ? ?
+		static void ResetIOP();																	//  helper function utilizing the offset and prototype fn	@TODO::relocate ? ?
+
+		//	maintaining this might get annoying , future revision should just keep IWriterColor and set STRONG_ORANGE | STRONG_RED for warning & error
+		typedef __int64(__fastcall* IConsoleWriter_WriteLn_stub)(const char*, ...);				//	[ AOB: 48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 31 D2 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC CC CC CC 48 83 EC ]
+		static IConsoleWriter_WriteLn_stub WriteLn;
+
+		typedef __int64(__fastcall* IConsoleWriter_cWriteLn_stub)(int, const char*, ...);		//	[ AOB: 48 83 EC ? 48 89 D0 89 CA 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 48 83 EC ]
+		static IConsoleWriter_cWriteLn_stub cWriteLn;
+
+		typedef __int64(__fastcall* IConsoleWriter_Warning_stub)(const char*, ...);				//	[ AOB: 48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 56 57 ]	
+		typedef __int64(__fastcall* IConsoleWriter_Error_stub)(const char*, ...);				//	[ AOB: 48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 41 57 41 56 41 55 ]	//	Console.Error("EE: Unrecognized op %x", cpuRegs.code);
+		typedef __int64(__fastcall* IConsoleWriterDev_WriteLn_stub)(const char*, ...);			//	[ AOB: 48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 31 D2 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC CC CC CC 41 57 ]			//	recResetIOP
+		typedef __int64(__fastcall* IConsoleWriterDev_cWriteLn_stub)(int, const char*, ...);	//	[ AOB: 48 83 EC ? 48 89 D0 89 CA 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 56 ]															//	DevCon.WriteLn(Color_Gray, "[R3000 Debugger] Branch to 0x890 (SYSMEM). Clearing modules."); // iopRecRecompile
+		typedef __int64(__fastcall* IConsoleWriterDev_Warning_stub)(const char*, ...);			//	[ AOB: 48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 56 48 81 EC ]	
+		typedef __int64(__fastcall* IConsoleWriterDev_Error_stub)(const char*, ...);			//	[ AOB: 48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 41 57 41 56 56 ]	//	DevCon.Error("[IOP] Impossible block clearing failure");
+		
+		/*	GENERAL RENDERER HOOKING METHODS
+		*
+		*/
+		typedef HRESULT(WINAPI* IDXGISwapChainPresent)(IDXGISwapChain*, UINT, UINT);
+		static HRESULT hkPresent(IDXGISwapChain*, UINT, UINT);
+		static LRESULT WndProc(const HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+		static IDXGISwapChainPresent oDXGISwapChainPresent;
+		static ID3D11RenderTargetView* D11RenderTarget;
+		static ID3D11DeviceContext* D11DeviceCtx;
+		static ID3D11Device* D3D11Device;
+		static WNDPROC oWndProc;
+		static HWND RenderWindow;
+		static bool isImGuiInit;
+		static bool isMenuShown;
+
+		/*	STEAM GAME OVERLAY RENDERER
+		* Module: GameOverlayRenderer64.dll
+			NOTE: PCSX2 Must be launched with steam for the module to be populated
+		*/
+		typedef __int64(__fastcall* steamCreateHook_stub)(unsigned __int64, __int64, __int64*, int);				//	48 89 5C 24 ? 57 48 83 EC ? 33 C0 48 89 44 24
+		typedef __int64(__fastcall* steamhkRelease11)(__int64);														//	48 89 5C 24 ? 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 8B F9 FF D0 48 8B D7
+		typedef __int64(__fastcall* steamhkPresent11)(__int64, unsigned int, unsigned int);							//	48 89 6C 24 ? 48 89 74 24 ? 41 56 48 83 EC ? 41 8B E8
+		typedef __int64(__fastcall* steamhkSetFullscreenState11)(__int64, unsigned int, __int64);					//	48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 83 EC ? 44 8B F2
+		typedef __int64(__fastcall* steamhkResizeBuffers11)(__int64, unsigned int, unsigned int, unsigned int);		//	48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 41 56 41 57 48 83 EC ? 44 8B FA
+
+
+		/*	DISCORD OVERLAY RENDERER
+		* Module: DiscordHook64.dll
+			NOTE: Discord must both be running & have permissions to execute an overlay
+
+		*/
+		static unsigned int g_discordPresemt;	//	48 8B 05 ? ? ? ? 48 89 D9 44 89 FA 41 89 F0 FF 15 ? ? ? ? 89 C7 89 F8
 
         //  DEPRECATED: pcsx2 1.6
     private:    //  ~
@@ -973,7 +1068,8 @@ namespace PlayStation2
 
 		unsigned int o_g_emu_thread;                                             //  global pointer to GEmu  -> PCSX2 v1.7.5617: 0x0
 		class EmuThread* g_emu_thread;											//	AOB: ? ? ?
-    };
+
+	};
 
 	/*
 		GSRenderer : 
@@ -1003,7 +1099,9 @@ namespace PlayStation2
         static RenderAPI                GetRenderAPI();         //  Obtain the current render api. Should be used to get the current class instance of GDevice
 
 
-    private:
+	public:
+   
+	private:
         virtual void                    vf_CreateSurface();
         virtual void                    vf_Function1();
         virtual void                    vf_Function2();

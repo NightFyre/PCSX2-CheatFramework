@@ -22,6 +22,9 @@ DWORD WINAPI MainThread(LPVOID hInstance)
         ///  Get Debug Registers
         PlayStation2::PCSX2::g_psxRegs = reinterpret_cast<PlayStation2::psxRegisters*>((PlayStation2::Memory::GetAddr(PlayStation2::PCSX2::o_psxRegs) - 0x20C));   //    similar to cpuRegs, the found offset is displaced and must be brought back to origin to access the data.
 
+        /// Reset Recompiler
+        PlayStation2::PCSX2::ResetIOP();             //  Reset IOP to re/capture events
+
         g_running = true;
 
         //  Loop
@@ -30,6 +33,10 @@ DWORD WINAPI MainThread(LPVOID hInstance)
             //  Exit Module
             if (PlayStation2::Tools::GetKeyState(VK_END, 500))
                 g_running = false;
+
+            //  Recompile IOP , can be used to capture a functions compilation. May need to trigger an event of sorts in game. YMMV
+            if (PlayStation2::Tools::GetKeyState(VK_HOME, 500))
+                PlayStation2::PCSX2::ResetIOP();
 
             if (fn_start <= 0)
                 continue;

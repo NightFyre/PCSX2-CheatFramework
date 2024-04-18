@@ -108,7 +108,7 @@ namespace PlayStation2
     HWND	                Console::m_pWndw;
     HANDLE                  Console::m_pPipe;
     bool                    Console::m_isConsoleAllocated{ false };
-    bool                    Console::m_isVisible{ true };
+    bool                    Console::m_isVisible{ false };
     std::mutex              Console::m_mutex;
     Console*                Console::m_instance = new Console();
 
@@ -162,7 +162,10 @@ namespace PlayStation2
         DestroyWindow(m_pWndw);                                             //  
         FreeConsole();
     }	
-    
+
+    ///---------------------------------------------------------------------------------------------------
+    void Console::ToggleViewState(bool x) { ShowWindow(GetConsoleWindow(), x ? SW_SHOW : SW_HIDE); m_isVisible = x; }
+
     //---------------------------------------------------------------------------------------------------
     void Console::LogMsgEx(FILE* stream, HANDLE pHand, const char* msg, EConsoleColors color, va_list args)
     {
@@ -364,6 +367,75 @@ namespace PlayStation2
     ///---------------------------------------------------------------------------------------------------
     int Memory::GetVtblIndex(void* fncPtr, void* vTblAddr) { return (((__int64)fncPtr - (__int64)vTblAddr) / sizeof(void*)) - 1; }
 
+    ///---------------------------------------------------------------------------------------------------
+    __int64 Memory::SignatureScan(const char* sig)
+    {
+        // Retrieve module headers
+        const auto dosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(dwGameBase);
+        const auto ntHeaders = reinterpret_cast<PIMAGE_NT_HEADERS>(dwGameBase + dosHeader->e_lfanew);
+
+        // Calculate the size of the image
+        const auto sizeOfImage = ntHeaders->OptionalHeader.SizeOfImage;
+
+        // Convert signature pattern to byte array
+        auto patternBytes = SignatureToBytes(sig);
+
+        // Get pointer to the start of the module
+        const auto scanBytes = reinterpret_cast<std::uint8_t*>(dwGameBase);
+
+        // Length of the pattern
+        const auto patternSize = patternBytes.size();
+        const auto patternData = patternBytes.data();
+
+        // Loop through the module memory
+        for (uintptr_t i = 0; i < sizeOfImage - patternSize; ++i) 
+        {
+            bool found = true;
+            // Compare each byte of the module memory with the pattern
+            for (size_t j = 0; j < patternSize; ++j) {
+                
+                // If byte doesn't match or is wildcard ('?'), move to the next byte
+                if (scanBytes[i + j] != patternData[j] && patternData[j] != -1) 
+                {
+                    found = false;
+                    break;
+                }
+            }
+            
+            // If pattern is found, return the address
+            if (found)
+                return reinterpret_cast<uintptr_t>(&scanBytes[i]);
+        }
+        
+        // Return NULL if pattern is not found
+        return NULL;
+    }
+
+    ///---------------------------------------------------------------------------------------------------
+    std::vector<int> Memory::SignatureToBytes(const char* pattern) 
+    {
+        std::vector<int> bytes;
+        const char* start = pattern;
+        const char* end = pattern + std::strlen(pattern);
+
+        for (const char* current = start; current < end; ++current) 
+        {
+            if (*current == '?') 
+            {
+                ++current;
+                
+                if (*current == '?')
+                    ++current;
+                
+                bytes.push_back(-1); // Placeholder for wildcard '?'
+            }
+            else
+                bytes.push_back(std::strtoul(current, const_cast<char**>(&current), 16)); // Convert hex string to integer
+        }
+        return bytes;
+    }
+
+
 #pragma endregion
 
     //----------------------------------------------------------------------------------------------------
@@ -509,34 +581,132 @@ namespace PlayStation2
     //  Class Offsets
     //  EmuThread*                  PCSX2::g_emu_thread;        //  NOT USED FOR NOW
     //  GSRenderer*                 PCSX2::g_gs_renderer;       //  NOT USED FOR NOW
-    unsigned int                PCSX2::o_gs_device{ 0x3FA2728 };
-    unsigned int                PCSX2::o_GSUpdateWindow;
-    unsigned int                PCSX2::o_GSDevice_GetRenderAPI;
-    GSDevice*                   PCSX2::g_gs_device;
-    unsigned int                PCSX2::o_psxRecompileInstruction{ 0x269D80 };
-    unsigned int                PCSX2::o_recompileNextInstruction{ 0x291CA0 };
-    unsigned int                PCSX2::o_recResetEE{ 0x2942C0 };
-    cpuRegisters*               PCSX2::g_cpuRegs;
-    __int32                     PCSX2::g_cpupc{ 0x0 };
-    unsigned int                PCSX2::o_cpuRegs{ 0x2EA8F2C };
-    psxRegisters*               PCSX2::g_psxRegs;
-    __int32                     PCSX2::g_psxpc{ 0x0 };
-    unsigned int                PCSX2::o_psxRegs{ 0x2EA809C };
+    unsigned int                    PCSX2::o_gs_device{ 0x3FA2728 };
+    GSDevice*                       PCSX2::g_gs_device;
+    unsigned int                    PCSX2::o_GSUpdateDisplayWindow;
+    unsigned int                    PCSX2::o_GSDevice_GetRenderAPI;
+    unsigned int                    PCSX2::o_psxRecompileInstruction{ 0x269D80 };
+    unsigned int                    PCSX2::o_recompileNextInstruction{ 0x291CA0 };
+    unsigned int                    PCSX2::o_recResetEE{ 0x2942C0 };
+    cpuRegisters*                   PCSX2::g_cpuRegs;
+    __int32                         PCSX2::g_cpupc{ 0x0 };
+    unsigned int                    PCSX2::o_cpuRegs{ 0x2EA8F2C };
+    psxRegisters*                   PCSX2::g_psxRegs;
+    __int32                         PCSX2::g_psxpc{ 0x0 };
+    unsigned int                    PCSX2::o_psxRegs{ 0x2EA809C };
+    unsigned int                    PCSX2::g_discordPresemt{ 0xE9090 };
+    PCSX2::IDXGISwapChainPresent    PCSX2::oDXGISwapChainPresent;   //  value automatically handled
+    ID3D11RenderTargetView*         PCSX2::D11RenderTarget;         //  value automatically handled
+    ID3D11DeviceContext*            PCSX2::D11DeviceCtx;            //  value automatically handled
+    ID3D11Device*                   PCSX2::D3D11Device;             //  value automatically handled
+    WNDPROC                         PCSX2::oWndProc;                //  value automatically handled
+    HWND                            PCSX2::RenderWindow;            //  value automatically handled
+    bool                            PCSX2::isImGuiInit;             //  value automatically handled
+    bool                            PCSX2::isMenuShown;             //  value automatically handled
+
+    //  Runtime Assign Method Pointers
+    PCSX2::IConsoleWriter_WriteLn_stub PCSX2::WriteLn = reinterpret_cast<PCSX2::IConsoleWriter_WriteLn_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 31 D2 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC CC CC CC 48 83 EC"));
+    PCSX2::IConsoleWriter_cWriteLn_stub PCSX2::cWriteLn = reinterpret_cast<PCSX2::IConsoleWriter_cWriteLn_stub>(Memory::SignatureScan("48 83 EC ? 48 89 D0 89 CA 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 48 83 EC"));
 
     //-----------------------------------------------------------------------------------
     void PCSX2::ResetEE()
     {
-        if (!o_recResetEE)
-        {
-            Console::cLogMsg("[!] Failed to Reset EE/iR5900 Recompiler ->\t'o_recResetEE was nullptr'\n", EConsoleColors::dark_red);
+        static __int64 pAddr = Memory::SignatureScan("80 3D ? ? ? ? ? 75 ? C6 05 ? ? ? ? ? C6 05 ? ? ? ? ? 80 3D");
+        if (!pAddr)
             return;
-        }
 
-        static recResetEE_stub fn = reinterpret_cast<recResetEE_stub>(Memory::GetAddr(o_recResetEE)); //  @TODO: provide method for obtaining function pointer
+        static recResetEE_stub fn = reinterpret_cast<recResetEE_stub>(pAddr);
 
         fn();
 
-        Console::cLogMsg("[+] EE/iR5900 Recompiler Reset\n", EConsoleColors::dark_gray);
+        Console::cLogMsg("[+] EE/iR5900 Recompiler Reset.\n", EConsoleColors::dark_gray);
+    }
+
+    //-----------------------------------------------------------------------------------
+    void PCSX2::ResetIOP()
+    {
+        static __int64 pAddr = Memory::SignatureScan("41 57 41 56 41 55 41 54 56 57 55 53 48 83 EC ? 66 0F 7F 7C 24 ? 66 0F 7F 74 24 ? 49 BE");
+        if (!pAddr)
+            return;
+
+        static recResetIOP_stub fn = reinterpret_cast<recResetIOP_stub>(pAddr);
+
+        fn();
+
+        Console::cLogMsg("[+] IOP/iR3000A Recompiler Reset.\n", EConsoleColors::dark_gray);
+    }
+
+    //-----------------------------------------------------------------------------------
+    //  
+    LRESULT PCSX2::WndProc(const HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+    {
+        //  @NOTE: Dear ImGui must be present
+        //  if (isMenuShown)
+        //  {
+        //      ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam);
+        //      return true;
+        //  }
+
+        return CallWindowProcA(oWndProc, hwnd, msg, wparam, lparam);
+    }
+
+    //-----------------------------------------------------------------------------------
+    //  
+    HRESULT PCSX2::hkPresent(IDXGISwapChain* p, UINT sync, UINT flags)
+    {
+        /// @NOTE: Dear ImGui must be present
+        //  if (!isImGuiInit)
+        //  {
+        //      if (SUCCEEDED(p->GetDevice(__uuidof(ID3D11Device), (void**)&D3D11Device)))
+        //      {
+        //          D3D11Device->GetImmediateContext(&D11DeviceCtx);
+        //          DXGI_SWAP_CHAIN_DESC sd;
+        //          p->GetDesc(&sd);
+        //  
+        //          RenderWindow = sd.OutputWindow;
+        //          ID3D11Texture2D* buffer;
+        //          p->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&buffer);
+        //          D3D11Device->CreateRenderTargetView(buffer, NULL, &D11RenderTarget);
+        //  
+        //          buffer->Release();
+        //          oWndProc = (WNDPROC)SetWindowLongPtrA(RenderWindow, GWLP_WNDPROC, (LONG_PTR)WndProc);
+        //  
+        //          ImGui::CreateContext();
+        //  
+        //          auto& io = ImGui::GetIO();
+        //          io.LogFilename = nullptr;
+        //          io.IniFilename = nullptr;
+        //  
+        //          ImGui_ImplWin32_Init(RenderWindow);
+        //          ImGui_ImplDX11_Init(D3D11Device, D11DeviceCtx);
+        //  
+        //          isImGuiInit = true;
+        //      }
+        //  
+        //      else
+        //          return oDXGISwapChainPresent(p, sync, flags);
+        //  }
+        //  
+        //  ImGui_ImplDX11_NewFrame();
+        //  ImGui_ImplWin32_NewFrame();
+        //  ImGui::NewFrame();
+        //  
+        //  if (Tools::GetKeyState(VK_HOME, 500))
+        //      isMenuShown ^= 1;
+        //  
+        //  if (isMenuShown)
+        //  {
+        //      ImGui::Begin("[PCSX2] Cheat Device", 0, 0);
+        //      ImGui::Text("Hello World!");
+        //      ImGui::End();
+        //  }
+        //  
+        //  ImGui::Render();
+        //  
+        //  device_context->OMSetRenderTargets(1, &D11RenderTarget, NULL);
+        //  ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+        return oDXGISwapChainPresent(p, sync, flags);
     }
 
 #pragma endregion

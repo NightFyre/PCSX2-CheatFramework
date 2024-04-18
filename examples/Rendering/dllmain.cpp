@@ -32,21 +32,26 @@ DWORD WINAPI MainThread(LPVOID hInstance)
 #endif    
 
     //  initialize pcsx2 cheat dev kit
-    if (PlayStation2::InitCDK("pcsx2-qt.exe", PlayStation2::PCSX2::o_gs_device))
+    if (PlayStation2::InitCDK("pcsx2-qt.exe", true))
     {
-
-        if (PlayStation2::GSDevice::GetRenderAPI() != PlayStation2::RenderAPI::D3D11)
-            MessageBoxA(NULL, "[ERROR] D3D11 NOT PRESENT", "Couldn't detect D3D11 as the active renderer.\nPlease switch to D3D11 before proceeding.", MB_OK | MB_ICONEXCLAMATION);
-
-
-        // Get GS Device
-        auto d3d11 = static_cast<PlayStation2::GSDevice11*>(PlayStation2::PCSX2::g_gs_device);
-        if (d3d11)
+        PlayStation2::Console::ToggleViewState(true);
+        PlayStation2::PCSX2::g_gs_device = reinterpret_cast<PlayStation2::GSDevice*>(*(__int64*)(PlayStation2::Memory::GetAddr(PlayStation2::PCSX2::o_gs_device))); //  offset because have not implemented reading assembly op code for variable , must be shrunk
+        if (PlayStation2::PCSX2::g_gs_device)
         {
-            //  Get SwapChain & Hook
-            pSwapChain = d3d11->GetSwapChain();
-            if (pSwapChain)            
-                PlayStation2::Memory::hkVFunction(pSwapChain, 8, oIDXGISwapChainPresent, hkPresent);
+
+            if (PlayStation2::GSDevice::GetRenderAPI() != PlayStation2::RenderAPI::D3D11)
+                MessageBoxA(NULL, "[ERROR] D3D11 NOT PRESENT", "Couldn't detect D3D11 as the active renderer.\nPlease switch to D3D11 before proceeding.", MB_OK | MB_ICONEXCLAMATION);
+
+
+            // Get GS Device
+            auto d3d11 = static_cast<PlayStation2::GSDevice11*>(PlayStation2::PCSX2::g_gs_device);
+            if (d3d11)
+            {
+                //  Get SwapChain & Hook
+                pSwapChain = d3d11->GetSwapChain();
+                if (pSwapChain)
+                    PlayStation2::Memory::hkVFunction(pSwapChain, 8, oIDXGISwapChainPresent, hkPresent);
+            }
         }
 
         g_running = true;
