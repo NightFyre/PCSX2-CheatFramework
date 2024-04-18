@@ -14,67 +14,67 @@ namespace PlayStation2
     //-----------------------------------------------------------------------------------
 
     ///---------------------------------------------------------------------------------------------------
-    bool InitCDK(const std::string& moduleName)
+    bool InitCDK(const std::string& moduleName, bool bDefaultInstances)
     {
         bool result{ false };
-
-        Tools::CPUTimer t;
 
         HANDLE pHand = GetModuleHandleA(moduleName.c_str());
         if (!pHand)
             return result;
 
-        CGlobals::g_console = Console::GetDefaultInstance();
-        
-        CGlobals::g_engine = Engine::GetDefaultInstance();
+        if (bDefaultInstances)
+        {
+            CGlobals::g_console = Console::GetDefaultInstance();
 
-        CGlobals::g_memory = Memory::GetDefaultInstance();
+            CGlobals::g_engine = Engine::GetDefaultInstance();
 
-        Console::LogMsg("[+][%.3f] PCSX2 Cheat Device Initialized!\n- PCSX2:\t0x%llX\n- PS2:\t\t0x%llX\n\n",
-            t.Stop(Tools::CPUTimer::ETimings::ETiming_MS),
-            (__int64)pHand,
-            PS2Memory::GetModuleBase()
-        );
+            CGlobals::g_memory = Memory::GetDefaultInstance();
+
+            Console::LogMsg("[+] PCSX2 Cheat Device Initialized!\n- PCSX2:\t0x%llX\n- PS2:\t\t0x%llX\n\n",
+                (__int64)pHand,
+                PS2Memory::GetModuleBase()
+            );
+        }
 
         return true;
     }
 
     ///---------------------------------------------------------------------------------------------------
-    //  Custom method for automatically initializing GSDevice
-    bool InitCDK(const std::string& moduleName, unsigned int gDevice)
-    {
-        bool result{ false };
-
-        Tools::CPUTimer t;
-
-        HANDLE pHand = GetModuleHandleA(moduleName.c_str());
-        if (!pHand)
-            return result;
-
-        PCSX2::g_gs_device = reinterpret_cast<GSDevice*>(*(__int64*)(Memory::GetAddr(gDevice)));
-        if (!PCSX2::g_gs_device)
-            return false;
-
-        CGlobals::g_console = Console::GetDefaultInstance();
-        
-        CGlobals::g_engine = Engine::GetDefaultInstance();
-
-        CGlobals::g_memory = Memory::GetDefaultInstance();
-
-        Console::LogMsg("[+][%.3f] PCSX2 Cheat Device Initialized!\n- PCSX2:\t0x%llX\n- PS2:\t\t0x%llX\n- GSDevice:\t0x%llX\n- RenderAPI:\t%d\n\n",
-            t.Stop(Tools::CPUTimer::ETimings::ETiming_MS),
-            (__int64)pHand,
-            PS2Memory::GetModuleBase(), 
-            PCSX2::g_gs_device,
-            GSDevice::GetRenderAPI()    //  @TODO: get string , its a virtual method . . .
-        );
-
-        return true;
-    }
+    ///  Custom method for automatically initializing GSDevice
+    //  bool InitCDK(const std::string& moduleName, unsigned int gDevice)
+    //  {
+    //      bool result{ false };
+    //  
+    //      Tools::CPUTimer t;
+    //  
+    //      HANDLE pHand = GetModuleHandleA(moduleName.c_str());
+    //      if (!pHand)
+    //          return result;
+    //  
+    //      PCSX2::g_gs_device = reinterpret_cast<GSDevice*>(*(__int64*)(Memory::GetAddr(gDevice)));
+    //      if (!PCSX2::g_gs_device)
+    //          return false;
+    //  
+    //      CGlobals::g_console = Console::GetDefaultInstance();
+    //      
+    //      CGlobals::g_engine = Engine::GetDefaultInstance();
+    //  
+    //      CGlobals::g_memory = Memory::GetDefaultInstance();
+    //  
+    //      Console::LogMsg("[+][%.3f] PCSX2 Cheat Device Initialized!\n- PCSX2:\t0x%llX\n- PS2:\t\t0x%llX\n- GSDevice:\t0x%llX\n- RenderAPI:\t%d\n\n",
+    //          t.Stop(Tools::CPUTimer::ETimings::ETiming_MS),
+    //          (__int64)pHand,
+    //          PS2Memory::GetModuleBase(), 
+    //          PCSX2::g_gs_device,
+    //          GSDevice::GetRenderAPI()    //  @TODO: get string , its a virtual method . . .
+    //      );
+    //  
+    //      return true;
+    //  }
 
     ///---------------------------------------------------------------------------------------------------
     // Template Initialization function compatible with Nightly Builds
-    bool InitCDK() { return InitCDK("pcsx2-qt.exe"); }
+    bool InitCDK() { return InitCDK("pcsx2-qt.exe", true); }
 
     ///---------------------------------------------------------------------------------------------------
     void ShutdownCDK() { Console::DestroyConsole(); }

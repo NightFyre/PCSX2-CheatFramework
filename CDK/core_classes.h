@@ -20,13 +20,17 @@ namespace PlayStation2
     //  bool (__fastcall* ConsoleWriteLine)(ConsoleColor, const char*, ...);
     class Console
     {
+        //  Memory::GetAddr(0x56B0)
+        //  xref 
+        __int64(__fastcall* _IConsoleWriter_WriteLn_stub)(const char*, ...) = (decltype(_IConsoleWriter_WriteLn_stub))(0);
+
     public:
         static Console*                 GetDefaultInstance();
         static void                     LogMsgEx(FILE* stream, HANDLE pHand, const char* msg, EConsoleColors color, va_list args);      //  Logs message to the console
         static void                     LogMsg(const char* msg, ...);                                                                   //  Easily logs message to the console
         static void                     cLogMsg(const char* msg, EConsoleColors color, ...);                                            //  Logs a color message to the console
         static void                     ToggleViewState(bool isVisible);                                                                //  
-        static void                     DestroyConsole();               // Should be called at the end of program as part of cleanup , decontructor with static methods would just constantly deallocate the console. 
+        static void                     DestroyConsole();                                                                               // Should be called at the end of program as part of cleanup , decontructor with static methods would just constantly deallocate the console. 
 
     public:
         Console();

@@ -35,7 +35,6 @@ DWORD WINAPI MainThread(LPVOID hInstance)
     if (PlayStation2::InitCDK("pcsx2-qt.exe", PlayStation2::PCSX2::o_gs_device))
     {
 
-
         if (PlayStation2::GSDevice::GetRenderAPI() != PlayStation2::RenderAPI::D3D11)
             MessageBoxA(NULL, "[ERROR] D3D11 NOT PRESENT", "Couldn't detect D3D11 as the active renderer.\nPlease switch to D3D11 before proceeding.", MB_OK | MB_ICONEXCLAMATION);
 
@@ -56,7 +55,7 @@ DWORD WINAPI MainThread(LPVOID hInstance)
         do
         {
             //  Exit Module
-            if (GetAsyncKeyState(VK_END) & 0x8000)
+            if (PlayStation2::Tools::GetKeyState(VK_END, 500))
                 g_running = false;
 
         } while (g_running);
@@ -83,15 +82,15 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  dwCallReason, LPVOID x)
 
     if (dwCallReason == DLL_PROCESS_ATTACH)
     {
-        
+
         DisableThreadLibraryCalls(hModule);
-        
+
         HANDLE pHand = CreateThread(0, 0, MainThread, hModule, 0, 0);
-    
+
         if (pHand)
             CloseHandle(pHand);
-    
+
     }
-    
+
     return TRUE;
 }

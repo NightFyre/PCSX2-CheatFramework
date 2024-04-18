@@ -12,7 +12,8 @@ namespace PlayStation2
 	// # Global functions
 	// --------------------------------------------------
 	bool InitCDK(const std::string& moduleName);
-	bool InitCDK(const std::string& moduleName, unsigned int gRenderer);
+	bool InitCDK(const std::string& moduleName, bool bDefaultInstances = true);
+	//	bool InitCDK(const std::string& moduleName, unsigned int gRenderer);
 	bool InitCDK();
 	void ShutdownCDK();
 }

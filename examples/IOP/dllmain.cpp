@@ -3,7 +3,7 @@
 
 static bool g_running;
 
-#define fn_start 0x0        //  should be function start address 
+#define fn_start 0x0             //  should be function start address 
 
 //---------------------------------------------------------------------------------------------------
 //  Initialize Client Thread
@@ -19,12 +19,8 @@ DWORD WINAPI MainThread(LPVOID hInstance)
     //  initialize pcsx2 cheat dev kit
     if (PlayStation2::InitCDK())
     {
-
         ///  Get Debug Registers
         PlayStation2::PCSX2::g_psxRegs = reinterpret_cast<PlayStation2::psxRegisters*>((PlayStation2::Memory::GetAddr(PlayStation2::PCSX2::o_psxRegs) - 0x20C));   //    similar to cpuRegs, the found offset is displaced and must be brought back to origin to access the data.
-        
-        /// Reset Recompiler
-        PlayStation2::PCSX2::ResetEE();             //  Reset EE so that we can re/capture events
 
         g_running = true;
 
@@ -32,20 +28,13 @@ DWORD WINAPI MainThread(LPVOID hInstance)
         do
         {
             //  Exit Module
-            if (GetAsyncKeyState(VK_END) & 0x8000)
+            if (PlayStation2::Tools::GetKeyState(VK_END, 500))
                 g_running = false;
-         
-            if (PlayStation2::PCSX2::o_recResetEE <= 0)
-                continue;
-
-            //  Recompile EE , can be used to capture a functions compilation. May need to trigger an event of sorts in game. YMMV
-            if (GetAsyncKeyState(VK_HOME) & 0x8000)
-                PlayStation2::PCSX2::ResetEE();
 
             if (fn_start <= 0)
                 continue;
 
-            //  Capture IOP Function Compilation
+            //  Capture IOP Instruction Interpretation
             if (PlayStation2::PCSX2::g_psxRegs->pc == fn_start)
             {
                 using namespace PlayStation2;
@@ -55,6 +44,7 @@ DWORD WINAPI MainThread(LPVOID hInstance)
                 const auto code = PCSX2::g_psxRegs->code;       //  ~
                 const auto GPR = PCSX2::g_psxRegs->GPR;         //  registers
 
+                //  Log Data
                 Console::cLogMsg("[+] PCSX2::PS2::IOP::fnName()\npc:\t%d\ncode:\t%d\nGPR.sp:\t%d\n\n", 
                     EConsoleColors::yellow,
                     pc,                         //  
@@ -83,15 +73,15 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  dwCallReason, LPVOID x)
 
     if (dwCallReason == DLL_PROCESS_ATTACH)
     {
-        
+
         DisableThreadLibraryCalls(hModule);
-        
+
         HANDLE pHand = CreateThread(0, 0, MainThread, hModule, 0, 0);
-    
+
         if (pHand)
             CloseHandle(pHand);
-    
+
     }
-    
+
     return TRUE;
 }

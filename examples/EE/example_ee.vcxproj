@@ -145,8 +145,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\SDK\core_package.cpp" />
-    <ClCompile Include="..\..\SDK\pcsx2_package.cpp" />
+    <ClCompile Include="..\..\CDK\core_package.cpp" />
+    <ClCompile Include="..\..\CDK\pcsx2_package.cpp" />
     <ClCompile Include="dllmain.cpp" />
   </ItemGroup>
   <ItemGroup>
