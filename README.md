@@ -14,7 +14,6 @@ This framework provides tools to port older codes to a more modern approach, usi
 
 ## USAGE
 1. include the CDK header as well as any required packages.  
-*NOTE: Engine_Package.h is a required package and needs to be manually included.*
  - `CDK.h`                  //  Including the SDK header will provide access to all the most necessary features.
  - `CDK.cpp`                //  make sure to include the source file to your project , otherwise attempting to use any methods will result in an "unresolved external error"
 
@@ -22,7 +21,7 @@ This framework provides tools to port older codes to a more modern approach, usi
 https://github.com/NightFyre/PCSX2-CheatFramework/blob/4bccdd509105c2238ac33f16fbafd11f3883dc44/CDK.h#L73-L74
 
 3. Do Stuff
-https://github.com/NightFyre/PCSX2-CheatFramework/blob/70dcf7dc51747df014f5d537a3188b8de1fe95a2/dllmain.cpp#L18-L29
+https://github.com/NightFyre/PlayStation2-Game-SDKs/blob/f68b2654d8112d883a7441be9a5000230cc55f15/SOCOM%20U.S%20Navy%20Seals/SOCOM1_package.cpp#L120-L137
 
 4. (optional) include game package for additional controls
 https://github.com/NightFyre/PCSX2-CheatFramework/blob/f7469873e8787f6efe29a19cdc813ef3f7f1e913/examples/GamePackage/dllmain.cpp#L3
