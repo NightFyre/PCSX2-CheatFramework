@@ -13,13 +13,12 @@ This framework provides tools to port older codes to a more modern approach, usi
 - Access EE & IOP Registers during execution
 
 ## USAGE
-1. include the SDK header as well as any required packages.  
+1. include the CDK header as well as any required packages.  
 *NOTE: Engine_Package.h is a required package and needs to be manually included.*
  - `CDK.h`                  //  Including the SDK header will provide access to all the most necessary features.
- - `Core_Package.cpp`       //  Main Package and must be included for basic usage 
- - `PCSX2_Package.cpp`      //  PCSX2 specific members and functions. Like the rendering API's for instance
+ - `CDK.cpp`                //  make sure to include the source file to your project , otherwise attempting to use any methods will result in an "unresolved external error"
 
-2. Initialize the SDK
+2. Initialize the Cheat Device
  - `PlayStation2::InitCDK();`   //  Basic CDK Initialization
 
 3. Do Stuff

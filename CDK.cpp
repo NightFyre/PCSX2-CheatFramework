@@ -79,12 +79,6 @@ namespace PlayStation2
     ///---------------------------------------------------------------------------------------------------
     void ShutdownCDK() { Console::DestroyConsole(); }
 
-    ///---------------------------------------------------------------------------------------------------
-    unsigned int GetVtblOffset(void* czInstance, const char* dwModule) { return ((*(unsigned int*)czInstance) - Memory::GetModuleBase()); }
-
-    ///---------------------------------------------------------------------------------------------------
-    int GetVtblIndex(void* fncPtr, void* vTblAddr) { return (((__int64)fncPtr - (__int64)vTblAddr) / sizeof(void*)) - 1; }
-
     //----------------------------------------------------------------------------------------------------
     //										CGLOBALS
     //-----------------------------------------------------------------------------------
@@ -364,6 +358,12 @@ namespace PlayStation2
         return TRUE;
     }
 
+    ///---------------------------------------------------------------------------------------------------
+    unsigned int Memory::GetVtblOffset(void* czInstance, const char* dwModule) { return ((*(unsigned int*)czInstance) - dwGameBase); }
+
+    ///---------------------------------------------------------------------------------------------------
+    int Memory::GetVtblIndex(void* fncPtr, void* vTblAddr) { return (((__int64)fncPtr - (__int64)vTblAddr) / sizeof(void*)) - 1; }
+
 #pragma endregion
 
     //----------------------------------------------------------------------------------------------------
@@ -550,7 +550,7 @@ namespace PlayStation2
     //-----------------------------------------------------------------------------------
     RenderAPI GSDevice::GetRenderAPI()
     {
-        return CallVFunction<RenderAPI>(PCSX2::g_gs_device, 9);
+        return Memory::CallVFunction<RenderAPI>(PCSX2::g_gs_device, 9);
     }
 
 #pragma endregion

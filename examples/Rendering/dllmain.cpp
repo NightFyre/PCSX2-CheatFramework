@@ -46,7 +46,7 @@ DWORD WINAPI MainThread(LPVOID hInstance)
             //  Get SwapChain & Hook
             pSwapChain = d3d11->GetSwapChain();
             if (pSwapChain)            
-                PlayStation2::hkVFunction(pSwapChain, 8, oIDXGISwapChainPresent, hkPresent);
+                PlayStation2::Memory::hkVFunction(pSwapChain, 8, oIDXGISwapChainPresent, hkPresent);
         }
 
         g_running = true;
@@ -62,7 +62,7 @@ DWORD WINAPI MainThread(LPVOID hInstance)
         
         //  Remove Hook
         if (pSwapChain)
-            PlayStation2::hkRestoreVFunction(pSwapChain, 8, oIDXGISwapChainPresent);
+            PlayStation2::Memory::hkRestoreVFunction(pSwapChain, 8, oIDXGISwapChainPresent);
 
         //  cleanup
         PlayStation2::ShutdownCDK(); 

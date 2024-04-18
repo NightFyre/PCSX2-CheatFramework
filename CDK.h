@@ -76,45 +76,6 @@ namespace PlayStation2
 	bool InitCDK();
 	void ShutdownCDK();
 
-	unsigned int GetVtblOffset(void* czInstance, const char* dwModule = NULL);
-
-	int GetVtblIndex(void* fncPtr, void* vTblAddr);
-
-	template<typename fnc>
-	fnc GetVFunction(const void* czInstance, size_t vfIndex)
-	{
-		auto vfTbl = *static_cast<const void***>(const_cast<void*>(czInstance));
-		return reinterpret_cast<fnc>(const_cast<void(*)>(vfTbl[vfIndex]));
-	}
-
-	template<typename retType, typename... Args>
-	retType CallVFunction(const void* czInstance, size_t vfIndex, Args&&... args)
-	{
-		const auto FUNCTION = GetVFunction<retType(*)(const void*, Args...)>(czInstance, vfIndex);
-		return FUNCTION(czInstance, std::forward<Args>(args)...);
-	}
-
-	template<typename OrigFunc>
-	void hkVFunction(void* instance, int index, OrigFunc& originalFunc, void* newFunc)
-	{
-		DWORD old;
-		auto vTable = *reinterpret_cast<__int64**>(instance);
-		originalFunc = reinterpret_cast<OrigFunc>(vTable[index]);
-		VirtualProtect(&vTable[index], sizeof(void*), PAGE_EXECUTE_READWRITE, &old);
-		vTable[index] = reinterpret_cast<__int64>(newFunc);
-		VirtualProtect(&vTable[index], sizeof(void*), old, &old);
-	}
-
-	template<typename OrigFunc>
-	void hkRestoreVFunction(void* instance, int index, OrigFunc originalFunc)
-	{
-		DWORD old;
-		auto vTable = *reinterpret_cast<__int64**>(instance);
-		VirtualProtect(&vTable[index], sizeof(void*), PAGE_EXECUTE_READWRITE, &old);
-		vTable[index] = reinterpret_cast<__int64>(originalFunc);
-		VirtualProtect(&vTable[index], sizeof(void*), old, &old);
-	}
-
 #pragma endregion
 
 	//----------------------------------------------------------------------------------------------------
@@ -447,11 +408,46 @@ namespace PlayStation2
     class Memory
     {
     public:
-        template <typename T>
-        static inline T                 ReadMemoryEx(__int64 addr) { return *(T*)addr; }
-        
-        template<typename T>
-        static inline void              WriteMemoryEx(__int64 addr, T patch) { *(T*)addr = patch; }
+		template <typename T>
+		static inline T                 ReadMemoryEx(__int64 addr) { return *(T*)addr; }
+
+		template<typename T>
+		static inline void              WriteMemoryEx(__int64 addr, T patch) { *(T*)addr = patch; }
+
+		template<typename fnc>
+		static fnc						GetVFunction(const void* czInstance, size_t vfIndex)
+		{
+			auto vfTbl = *static_cast<const void***>(const_cast<void*>(czInstance));
+			return reinterpret_cast<fnc>(const_cast<void(*)>(vfTbl[vfIndex]));
+		}
+
+		template<typename retType, typename... Args>
+		static retType					CallVFunction(const void* czInstance, size_t vfIndex, Args&&... args)
+		{
+			const auto FUNCTION = GetVFunction<retType(*)(const void*, Args...)>(czInstance, vfIndex);
+			return FUNCTION(czInstance, std::forward<Args>(args)...);
+		}
+
+		template<typename OrigFunc>
+		static void						hkVFunction(void* instance, int index, OrigFunc& originalFunc, void* newFunc)
+		{
+			DWORD old;
+			auto vTable = *reinterpret_cast<__int64**>(instance);
+			originalFunc = reinterpret_cast<OrigFunc>(vTable[index]);
+			VirtualProtect(&vTable[index], sizeof(void*), PAGE_EXECUTE_READWRITE, &old);
+			vTable[index] = reinterpret_cast<__int64>(newFunc);
+			VirtualProtect(&vTable[index], sizeof(void*), old, &old);
+		}
+
+		template<typename OrigFunc>
+		static void						hkRestoreVFunction(void* instance, int index, OrigFunc originalFunc)
+		{
+			DWORD old;
+			auto vTable = *reinterpret_cast<__int64**>(instance);
+			VirtualProtect(&vTable[index], sizeof(void*), PAGE_EXECUTE_READWRITE, &old);
+			vTable[index] = reinterpret_cast<__int64>(originalFunc);
+			VirtualProtect(&vTable[index], sizeof(void*), old, &old);
+		}
 
     public:
         static Memory*                  GetDefaultInstance();
@@ -461,6 +457,8 @@ namespace PlayStation2
         static __int64                  ResolvePtrChain(__int64 addr, std::vector<unsigned int> offsets = {});
         static bool                     BytePatch(__int64 Address, BYTE* bytes, unsigned int size);
         static bool                     NopBytes(__int64 Address, unsigned int size);
+		static unsigned int				GetVtblOffset(void* czInstance, const char* dwModule = NULL);
+		static int						GetVtblIndex(void* fncPtr, void* vTblAddr);
 
     public:
         Memory();
