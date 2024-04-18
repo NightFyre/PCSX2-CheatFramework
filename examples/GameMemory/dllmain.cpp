@@ -3,6 +3,8 @@
 
 static bool g_running;
 
+#define offset 0x1000
+
 //---------------------------------------------------------------------------------------------------
 //  Initialize Client Thread
 DWORD WINAPI MainThread(LPVOID hInstance)
@@ -32,16 +34,16 @@ DWORD WINAPI MainThread(LPVOID hInstance)
         PlayStation2::Console::LogMsg("[+][%.3f][PS2Memory::GetModuleBase] 0x%llX\n", t.GetElapsedTime(clock()), eeModuleBase);
 
         //  -   retrieve an offsets virtual address in memory
-        long long offsetAddress = PlayStation2::PS2Memory::GetAddr(0x1000);
+        long long offsetAddress = PlayStation2::PS2Memory::GetAddr(offset);
         PlayStation2::Console::LogMsg("[+][%.3f][PS2Memory::GetAddr] 0x%llX\n", t.GetElapsedTime(clock()), offsetAddress);
 
         //  -   read 8 bytes from the offset virtual address obtained in the previous step
-        auto read_result_long = PlayStation2::PS2Memory::ReadLong<long long>(offsetAddress);
-        PlayStation2::Console::LogMsg("[+][%.3f][PS2Memory::ReadLong] 0x%llX\n", t.GetElapsedTime(clock()), read_result_long);
+        auto readResultLong = PlayStation2::PS2Memory::ReadLong<long long>(offsetAddress);
+        PlayStation2::Console::LogMsg("[+][%.3f][PS2Memory::ReadLong] 0x%llX\n", t.GetElapsedTime(clock()), readResultLong);
 
-        //  -   read 8 bytes from a virtual address in memory using a games offset
-        auto read_result_short = PlayStation2::PS2Memory::ReadShort<__int32>(0x2000);
-        PlayStation2::Console::LogMsg("[+][%.3f][PS2Memory::ReadShort] 0x%llX\n", t.GetElapsedTime(clock()), read_result_short);
+        //  -   read 4 bytes from a virtual address in memory using a games offset
+        auto readResultShort = PlayStation2::PS2Memory::ReadShort<__int32>(offset);
+        PlayStation2::Console::LogMsg("[+][%.3f][PS2Memory::ReadShort] 0x%8X\n", t.GetElapsedTime(clock()), readResultShort);
 
 
         //  -   Obtain basic process information such as PID, handle, base address & window information

@@ -25,10 +25,11 @@ https://github.com/NightFyre/PCSX2-CheatFramework/blob/4bccdd509105c2238ac33f16f
 https://github.com/NightFyre/PCSX2-CheatFramework/blob/70dcf7dc51747df014f5d537a3188b8de1fe95a2/dllmain.cpp#L18-L29
 
 4. (optional) include game package for additional controls
+https://github.com/NightFyre/PCSX2-CheatFramework/blob/f7469873e8787f6efe29a19cdc813ef3f7f1e913/examples/GamePackage/dllmain.cpp#L3
 
 ## USAGE EXAMPLES
 
-- Access EE Memory
+- Access EE Virtual Memory
 https://github.com/NightFyre/PCSX2-CheatFramework/blob/b2ae5a44d7c1452256920c4af81f745cdf0df2f3/examples/GameMemory/dllmain.cpp#L33-L34
 
 - Get Virtual Address
@@ -38,15 +39,7 @@ https://github.com/NightFyre/PCSX2-CheatFramework/blob/b2ae5a44d7c1452256920c4af
 https://github.com/NightFyre/PCSX2-CheatFramework/blob/b2ae5a44d7c1452256920c4af81f745cdf0df2f3/examples/GameMemory/dllmain.cpp#L41-L47
 
 - Access Class Members via GamePackages 
-```cpp
-/// SOCOM 1 -> Access SealObject & Modify Weapon Ammo
-{
-    // Create an instance of the Offsets Class
-    SOCOM1::CZSeal* pLocalSeal = SOCOM1::CZSeal::GetDefaultInstance();
-    if (pLocalSeal)
-        Console::cLogMsg("[+][PCSX2-CDK][SOCOM] LocalSeal Name: %s\n", EConsoleColors::green, pLocalSeal->GetName().c_str());
-}
-```
+https://github.com/NightFyre/PCSX2-CheatFramework/blob/f7469873e8787f6efe29a19cdc813ef3f7f1e913/examples/GamePackage/dllmain.cpp#L31
 
 - Hook Rendering API
 https://github.com/NightFyre/PCSX2-CheatFramework/blob/7c786cdd3e7f8c0855bc7d1f83df687092424604/examples/Rendering/dllmain.cpp#L44-L51
