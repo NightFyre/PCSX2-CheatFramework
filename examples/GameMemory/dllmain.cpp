@@ -25,26 +25,21 @@ DWORD WINAPI MainThread(LPVOID hInstance)
         const auto pcsx2ModuleBase = PlayStation2::Memory::GetModuleBase();
         PlayStation2::Console::LogMsg("[+][%.3f][Memory::GetModuleBase] 0x%llX\n", t.GetElapsedTime(clock()), pcsx2ModuleBase);
 
-        //  -   Read 8 bytes from module base address
-        long long result = PlayStation2::Memory::ReadMemoryEx<long long>(pcsx2ModuleBase);
-        PlayStation2::Console::LogMsg("[+][%.3f][Memory::ReadMemoryEx] 0x%llX\n", t.GetElapsedTime(clock()), result);
+        //  -   Read 4 bytes from module base address
+        const auto result = PlayStation2::Memory::ReadMemoryEx<__int32>(pcsx2ModuleBase);
+        PlayStation2::Console::LogMsg("[+][%.3f][Memory::ReadMemoryEx] 0x%8X\n", t.GetElapsedTime(clock()), result);
 
         //  -   Get EE Memory Module Base ( ps2 game ram )
         const auto eeModuleBase = PlayStation2::PS2Memory::GetModuleBase();
         PlayStation2::Console::LogMsg("[+][%.3f][PS2Memory::GetModuleBase] 0x%llX\n", t.GetElapsedTime(clock()), eeModuleBase);
 
         //  -   retrieve an offsets virtual address in memory
-        long long offsetAddress = PlayStation2::PS2Memory::GetAddr(offset);
+        const auto offsetAddress = PlayStation2::PS2Memory::GetAddr(offset);
         PlayStation2::Console::LogMsg("[+][%.3f][PS2Memory::GetAddr] 0x%llX\n", t.GetElapsedTime(clock()), offsetAddress);
 
-        //  -   read 8 bytes from the offset virtual address obtained in the previous step
-        auto readResultLong = PlayStation2::PS2Memory::ReadLong<long long>(offsetAddress);
-        PlayStation2::Console::LogMsg("[+][%.3f][PS2Memory::ReadLong] 0x%llX\n", t.GetElapsedTime(clock()), readResultLong);
-
         //  -   read 4 bytes from a virtual address in memory using a games offset
-        auto readResultShort = PlayStation2::PS2Memory::ReadShort<__int32>(offset);
+        const auto readResultShort = PlayStation2::PS2Memory::ReadShort<__int32>(offset);
         PlayStation2::Console::LogMsg("[+][%.3f][PS2Memory::ReadShort] 0x%8X\n", t.GetElapsedTime(clock()), readResultShort);
-
 
         //  -   Obtain basic process information such as PID, handle, base address & window information
         PlayStation2::ProcessInfo pInfo;

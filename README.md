@@ -32,17 +32,17 @@ https://github.com/NightFyre/PCSX2-CheatFramework/blob/f7469873e8787f6efe29a19cd
 - Access EE Virtual Memory
 https://github.com/NightFyre/PCSX2-CheatFramework/blob/b2ae5a44d7c1452256920c4af81f745cdf0df2f3/examples/GameMemory/dllmain.cpp#L33-L34
 
-- Get Virtual Address
+- Get PS2 EE Virtual Address
 https://github.com/NightFyre/PCSX2-CheatFramework/blob/b2ae5a44d7c1452256920c4af81f745cdf0df2f3/examples/GameMemory/dllmain.cpp#L37-L38
 
-- Read Virtual Memory
+- Read PS2 EE Virtual Memory
 https://github.com/NightFyre/PCSX2-CheatFramework/blob/b2ae5a44d7c1452256920c4af81f745cdf0df2f3/examples/GameMemory/dllmain.cpp#L41-L47
 
 - Access Class Members via GamePackages 
 https://github.com/NightFyre/PCSX2-CheatFramework/blob/f7469873e8787f6efe29a19cdc813ef3f7f1e913/examples/GamePackage/dllmain.cpp#L31
 
 - Hook Rendering API
-https://github.com/NightFyre/PCSX2-CheatFramework/blob/7c786cdd3e7f8c0855bc7d1f83df687092424604/examples/Rendering/dllmain.cpp#L44-L51
+https://github.com/NightFyre/PCSX2-CheatFramework/blob/7690e62042b37c8a7c7465d42dcc35cfbc678c7d/examples/Rendering/dllmain.cpp#L42-L50
 
 
 ### References & Credits
