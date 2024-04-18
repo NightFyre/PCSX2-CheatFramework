@@ -507,8 +507,8 @@ namespace PlayStation2
     //----------------------------------------------------------------------------------------------------
     //  STATICS
     //  Class Offsets
-    EmuThread*                  PCSX2::g_emu_thread;
-    GSRenderer*                 PCSX2::g_gs_renderer;
+    //  EmuThread*                  PCSX2::g_emu_thread;        //  NOT USED FOR NOW
+    //  GSRenderer*                 PCSX2::g_gs_renderer;       //  NOT USED FOR NOW
     unsigned int                PCSX2::o_gs_device{ 0x3FA2728 };
     unsigned int                PCSX2::o_GSUpdateWindow;
     unsigned int                PCSX2::o_GSDevice_GetRenderAPI;
@@ -524,18 +524,18 @@ namespace PlayStation2
     unsigned int                PCSX2::o_psxRegs{ 0x2EA809C };
 
     //-----------------------------------------------------------------------------------
-    void ResetEE()
+    void PCSX2::ResetEE()
     {
-        if (!PCSX2::o_recResetEE)
+        if (!o_recResetEE)
         {
             Console::cLogMsg("[!] Failed to Reset EE/iR5900 Recompiler ->\t'o_recResetEE was nullptr'\n", EConsoleColors::dark_red);
             return;
         }
 
-        static recResetEE_stub fn = reinterpret_cast<recResetEE_stub>(Memory::GetAddr(PCSX2::o_recResetEE)); //  @TODO: provide method for obtaining function pointer
+        static recResetEE_stub fn = reinterpret_cast<recResetEE_stub>(Memory::GetAddr(o_recResetEE)); //  @TODO: provide method for obtaining function pointer
 
         fn();
-    
+
         Console::cLogMsg("[+] EE/iR5900 Recompiler Reset\n", EConsoleColors::dark_gray);
     }
 

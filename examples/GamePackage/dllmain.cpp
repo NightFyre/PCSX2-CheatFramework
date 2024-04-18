@@ -1,6 +1,5 @@
 #pragma once
-#include "CDK.h"
-
+#include <CDK.h>
 #include "lib/PlayStation2-Game-SDKs/SOCOM U.S Navy Seals/SOCOM1_package.h"
 
 static bool g_running;

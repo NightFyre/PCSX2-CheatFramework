@@ -7,8 +7,8 @@
 
 /*
 	
-	// [SECTION] Header Includes
 	// [SECTION] Defines
+	// [SECTION] Header Includes
 	// [SECTION] Core Methods
 	// [SECTION] Core Structures
 	// [SECTION] Core Device Classes
@@ -16,6 +16,9 @@
 	// [SECTION] PCSX2 Classes & Methods
 	
 */
+
+#define DEARIMGUI 0						//	set to include Dear ImGui
+#define MINHOOK 0						//	set to inlucde MinHook
 
 #pragma once
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
@@ -38,8 +41,22 @@
 
 //	RENDERING APIS
 #include <d3d11.h>
+#pragma comment(lib, "d3d11.lib")
 #include <d3d12.h>
+#pragma comment(lib, "d3d12.lib")
 #include <dxgi1_4.h>
+
+#if DEARIMGUI
+
+#include <ImGui.h>
+
+#endif // DEARIMGUI
+
+#if MINHOOK
+
+#include <minhook.h>
+
+#endif	//	MINHOOK
 
 namespace PlayStation2
 {
@@ -594,20 +611,13 @@ namespace PlayStation2
 #pragma region	//	PCSX2 METHODS
 
 
-	typedef __int64(__fastcall* GSUpdateDisplayWindow_stub)();                      //  [ Nightly AOB: 48 83 EC 48 48 8B 0D ? ? ? ? 48 ] [ Soource AOB: 48 83 EC 48 48 8B 0D ? ? ? ? 48 8B ]
-	typedef __int8(__fastcall* GSDevice_GetRenderAPI_stub)(class GSDevice*);        //  Returns the graphics API used by this device.
-	typedef void(__fastcall* recompileNextInstruction_stub)(bool, bool);            //  AOB: [ Nightly AOB: E8 ? ? ? ? C7 44 24 ? ? ? ? ? 49 ]  [ Source AOB: ~ ] [ string: xref "Applying Dynamic Patch to address 0x%08X" ]
-	typedef void(__fastcall* psxRecompileNextInstruction_stub)(bool, bool);         //  [ Nightly AOB: E8 ? ? ? ? 8B 05 ? ? ? ? 8B 0D ? ? ? ? 85 ]  [ Source AOB: E8 ? ? ? ? 8B 15 ? ? ? ? 85 D2 75 ]
-	typedef void(__fastcall* recResetEE_stub)();                                    //  [ Nightly AOB: 80 3D ?? ?? ?? ?? ?? 75 30 C6 05 ?? ?? ?? ?? ?? C6 ]  [ Source AOB: 80 3D ? ? ? ? ? 74 3D 80 ]
-	void ResetEE();																	//  helper function utilizing the offsets and prototype fn
-
 #pragma endregion
 
 	//----------------------------------------------------------------------------------------------------
 	//									[SECTION] PCSX2 STRUCTS & ENUMS
 	//-----------------------------------------------------------------------------------
 
-#pragma region	//	PCSX2 CLASSES
+#pragma region	//	PCSX2 STRUCTS & ENUMS
 
 	enum class RenderAPI
 	{
@@ -706,7 +716,7 @@ namespace PlayStation2
 
 	/*
 		iR5900
-
+		EE Register Information
 		comments & structures thanks to pcsx2 team
 	*/
 	struct cpuRegisters
@@ -868,7 +878,7 @@ namespace PlayStation2
 
 	/*
 		iR3000A
-
+		IOP Register Information
 		comments & structures thanks to pcsx2 team
 	*/
 	struct psxRegisters
@@ -914,21 +924,15 @@ namespace PlayStation2
     {	
     public:
 
-		static unsigned int o_gs_renderer;													//  global pointer to GRenderer  -> PCSX2 v1.7.5617: 0x0
-        static class GSRenderer* g_gs_renderer;
-
-		static unsigned int o_g_emu_thread;                                                //  global pointer to GEmu  -> PCSX2 v1.7.5617: 0x0
-        static class EmuThread* g_emu_thread;
-
         static unsigned int o_gs_device;                                                //  global pointer to GSDevice  -> PCSX2 v1.7.5617: 0x3FA2728
         static class GSDevice* g_gs_device;                                             //  AOB: 48 8B 0D ? ? ? ? 48 85 C9 74 20
         
         //	function offsets
-        static unsigned int o_GSDevice_GetRenderAPI;                                    //  offset to function  //  GSDevice::vfIndex [9]
-        static unsigned int o_GSUpdateWindow;                                           //  offset to function  //   GSDevice::vfIndex [12]
+		static unsigned int o_GSUpdateWindow;                                           //  offset to function  ->  GSDevice::vfIndex [12]
+        static unsigned int o_GSDevice_GetRenderAPI;                                    //  offset to function  ->  GSDevice::vfIndex [9]
+		static unsigned int o_recompileNextInstruction;                                 //  offset to function  ->  PCSX2 v1.7.5617: 0x291CA0
         static unsigned int o_psxRecompileInstruction;                                  //  offset to function  ->  PCSX2 v1.7.5617: 0x269D80
-        static unsigned int o_recompileNextInstruction;                                 //  offset to function  ->  PCSX2 v1.7.5617: 0x291CA0
-        static unsigned int o_recResetEE;                                               //  offset to function -> PCSX2 v1.7.5617: 0x2942C0
+        static unsigned int o_recResetEE;                                               //  offset to function	->	PCSX2 v1.7.5617: 0x2942C0
 
         /*
 
@@ -953,13 +957,24 @@ namespace PlayStation2
         static psxRegisters* g_psxRegs;     //      iR3000A
         static __int32 g_psxpc;             //      offset  ->  PCSX2 v1.7.5617: 0      //  @TODO:have not determined a method for obtaining
 
-
-
+		//	fn Prototypes
+		typedef __int64(__fastcall* GSUpdateDisplayWindow_stub)();                      //  [ Nightly AOB: 48 83 EC 48 48 8B 0D ? ? ? ? 48 ] [ Soource AOB: 48 83 EC 48 48 8B 0D ? ? ? ? 48 8B ]
+		typedef __int8(__fastcall* GSDevice_GetRenderAPI_stub)(class GSDevice*);        //  GSDevice Virtual Method #6 Returns the graphics API used by this device.
+		typedef void(__fastcall* recompileNextInstruction_stub)(bool, bool);            //  AOB: [ Nightly AOB: E8 ? ? ? ? C7 44 24 ? ? ? ? ? 49 ]  [ Source AOB: ~ ] [ string: xref "Applying Dynamic Patch to address 0x%08X" ]
+		typedef void(__fastcall* psxRecompileNextInstruction_stub)(bool, bool);         //  [ Nightly AOB: E8 ? ? ? ? 8B 05 ? ? ? ? 8B 0D ? ? ? ? 85 ]  [ Source AOB: E8 ? ? ? ? 8B 15 ? ? ? ? 85 D2 75 ]
+		typedef void(__fastcall* recResetEE_stub)();                                    //  [ Nightly AOB: 80 3D ?? ?? ?? ?? ?? 75 30 C6 05 ?? ?? ?? ?? ?? C6 ]  [ Source AOB: 80 3D ? ? ? ? ? 74 3D 80 ]
+		static void ResetEE();															//  helper function utilizing the offset and prototype fn
 
         //  DEPRECATED: pcsx2 1.6
     private:    //  ~
         uintptr_t hk_OnLeftDClick   = NULL; //  Signature("48 8B 05 ? ? ? ? 80 B8 ? ? ? ? ? 74 0C").Scan().As<uint64_t>();
         uintptr_t hk_ResetEE        = NULL; //  Signature("80 3D ? ? ? ? ? 74 13 B8 ? ? ? ? 86").Scan().As<uint64_t>();	// 80 3D ? ? ? ? ? 75 30 C6 05 ? ? ? ? ? C6
+
+		unsigned int o_gs_renderer;												//  global pointer to GRenderer  -> PCSX2 v1.7.5617: 0x0
+		class GSRenderer* g_gs_renderer;											//	AOB: ? ? ?
+
+		unsigned int o_g_emu_thread;                                             //  global pointer to GEmu  -> PCSX2 v1.7.5617: 0x0
+		class EmuThread* g_emu_thread;											//	AOB: ? ? ?
     };
 
 	/*
