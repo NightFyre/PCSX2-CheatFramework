@@ -5,7 +5,7 @@
 #define CDK_VERSION		"v1.0.0"			//	? ? ? 
 #define PCSX2_VERSION	"v1.5617"			//	all static offsets are set in accordance to the module version noted here
 
-#define DEARIMGUI		false				//	
+#define DEARIMGUI		true				//	
 #define DEARIMGUI_MATH	false				//	
 #define MINHOOK			false				//	
 
@@ -541,7 +541,7 @@ namespace PlayStation2
                 -   PS2Memory::WriteShort<Vector3>(offset, patch)
         */
         template <typename T>
-        static inline bool              WriteShort(__int32 offset, T patch) { return WriteLong<T>(GetAddr(offset), patch); }
+        static inline void              WriteShort(__int32 offset, T patch) { WriteLong<T>(GetAddr(offset), patch); }
 
         //  takes an input long address , reads the value and casts it to a class pointer
         template <typename T>

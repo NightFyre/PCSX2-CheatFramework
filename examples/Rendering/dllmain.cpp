@@ -4,6 +4,8 @@ static bool g_running;
 
 //---------------------------------------------------------------------------------------------------
 //  fwd declare rendering helpers
+void HUD();
+void MENU();
 void InitImGui();
 void RenderImGui();
 LRESULT WndProc(const HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
@@ -141,9 +143,13 @@ void InitImGui()
 
         ImGui::CreateContext();
 
-        auto& io = ImGui::GetIO();
+        ImGuiIO& io = ImGui::GetIO(); 
+        //  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+        //  io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;     // Enable GamePad Controls
         io.LogFilename = nullptr;
         io.IniFilename = nullptr;
+
+        ImGui::StyleColorsClassic();
 
         ImGui_ImplWin32_Init(PlayStation2::PCSX2::RenderWindow);
         ImGui_ImplDX11_Init(PlayStation2::PCSX2::D3D11Device, PlayStation2::PCSX2::D11DeviceCtx);
@@ -163,19 +169,97 @@ void RenderImGui()
     if (PlayStation2::Tools::GetKeyState(VK_INSERT, 500))
         PlayStation2::PCSX2::isMenuShown ^= 1;
 
-    //  Early exit if the menu is not meant to be rendered
-    if (!PlayStation2::PCSX2::isMenuShown)
-        return;
+    //  Render GUI Menu
+    if (PlayStation2::PCSX2::isMenuShown)
+        MENU();
+
+    //  Render Heads Up Display
+    //  HUD();
+
+}
+
+
+//---------------------------------------------------------------------------------------------------
+//  render gui window
+void MENU()
+{
 
     //   Render ImGui
-    if (ImGui::Begin("[ PCSX2 ] Cheat Device", nullptr, 96))
+    if (!ImGui::Begin("[ PCSX2 ] Cheat Device", nullptr))
     {
-        ImGui::Text("Hello World!");
-
-        //  Display PCSX2 Process Information
-
-        //  Display PS2 EE Mem Address
-
         ImGui::End();
+        return;
     }
+
+    ImGui::Text("Hello World!");
+
+    //  Display PCSX2 Process Information
+    ImGui::Text("PCSX2ModuleBase: 0x%llX", PlayStation2::Memory::GetModuleBase());
+    ImGui::Text("PS2ModuleBase: 0x%llX", PlayStation2::PS2Memory::GetModuleBase());
+    ImGui::Text("GSDevice: 0x%llX", PlayStation2::PCSX2::g_gs_device);
+    ImGui::Text("D3D11 SwapChain: 0x%llX", PlayStation2::PCSX2::pSwapChain);
+
+    static int BytesPerLine{ 4 };
+    static int MemReadSize{ 0x1000 };
+    //  ImGui::InputInt("Memory Read Size:", &MemReadSize, 1, 1);
+    ImGui::BeginChild("MemoryScanner", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Border);
+    {
+        int pad{ 0 };
+        for (int i = 0; i < MemReadSize; i += BytesPerLine)
+        {
+            static __int64 base = PlayStation2::PS2Memory::GetModuleBase();
+            if (!base)
+            {
+                ImGui::Text("Failed to get module base address."); 
+                break;
+            }
+
+            ImGui::Text("%p: ", (unsigned long long)(base + i));
+            ImGui::SameLine();
+            for (int j = 0; j < BytesPerLine ; j++)
+            {
+                ImGui::Text("0x%02X ", PlayStation2::PS2Memory::ReadLong<unsigned __int8>(base + i + j));
+                ImGui::SameLine();
+            }
+            ImGui::NewLine();
+        }
+    }
+    ImGui::EndChild();
+    ImGui::End();
+
+}
+
+//---------------------------------------------------------------------------------------------------
+//  render gui window
+void HUD()
+{
+
+    auto io = ImGui::GetIO();
+    ImGui::SetWindowPos(ImVec2(0.0f, 0.0f));
+    ImGui::SetWindowSize(ImGui::GetMainViewport()->Size);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, NULL);
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.00f, 0.00f, 0.00f, 0.00f));
+    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.00f, 0.00f, 1.00f, 0.00f));
+    if (!ImGui::Begin("[ PCSX2 ] Cheat Device Heads Up Display", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs))
+    {
+        ImGui::PopStyleColor(2);
+        ImGui::PopStyleVar();
+        ImGui::End();
+        return;
+    }
+    ImGui::PopStyleColor(2);
+    ImGui::PopStyleVar();
+
+    auto ImDraw = ImGui::GetBackgroundDrawList();
+    auto draw_size = ImGui::GetMainViewport()->Size;
+    auto center = ImVec2({ draw_size.x * .5f, draw_size.y * .5f });
+    auto top_center = ImVec2({ draw_size.x * .5f, draw_size.y * 0.0f });
+
+    const char* text = "[ PCSX2 ] CHEAT DEVICE";
+    float textSize = ImGui::CalcTextSize(text).x;
+    ImVec2 textPosition = ImVec2(top_center.x - (textSize * 0.5f), top_center.y);
+    ImDraw->AddText(ImGui::GetFont(), 16.f, textPosition, IM_COL32_WHITE, text, text + strlen(text), 800, 0);
+
+    ImGui::End();
+
 }
