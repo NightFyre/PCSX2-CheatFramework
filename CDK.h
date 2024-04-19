@@ -17,9 +17,6 @@
 	
 */
 
-#define DEARIMGUI 0						//	set to include Dear ImGui
-#define MINHOOK 0						//	set to inlucde MinHook
-
 #pragma once
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
@@ -46,13 +43,22 @@
 #pragma comment(lib, "d3d12.lib")
 #include <dxgi1_4.h>
 
-#if DEARIMGUI
+#ifdef DEARIMGUI
+
+#ifdef DEARIMGUI_MATH
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif
 
 #include <ImGui.h>
+#include <imgui_internal.h>
+#include <backends/imgui_impl_win32.h>
+#include <backends/imgui_impl_dx11.h>
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 #endif // DEARIMGUI
 
-#if MINHOOK
+#ifdef MINHOOK
 
 #include <minhook.h>
 
@@ -356,13 +362,22 @@ namespace PlayStation2
 	class CGlobals
     {
     public: 
-        static class Console*           g_console;
-        static class Engine*            g_engine;
-        static class Memory*            g_memory;
+        static class Console*           g_console;		//	
+        static class Engine*            g_engine;		//	
+        static class Memory*            g_memory;		//	
     };
 
-    //  @TODO: hook pcsx2 console update function for thread context & use pcsx2 console for output.
-    //  bool (__fastcall* ConsoleWriteLine)(ConsoleColor, const char*, ...);
+	class Engine
+	{
+	public:
+
+	public:
+		static Engine* GetDefaultInstance();
+
+	private:
+		static Engine* m_instance;                     //  static class instance
+	};
+
     class Console
     {
 
@@ -371,7 +386,7 @@ namespace PlayStation2
         static void                     LogMsgEx(FILE* stream, HANDLE pHand, const char* msg, EConsoleColors color, va_list args);      //  Logs message to the console
         static void                     LogMsg(const char* msg, ...);                                                                   //  Easily logs message to the console
         static void                     cLogMsg(const char* msg, EConsoleColors color, ...);                                            //  Logs a color message to the console
-        static void                     ToggleViewState(bool isVisible);                                                                //  
+        static void                     SetViewState(bool isVisible);																	//  Show or hide window with true or false
         static void                     DestroyConsole();                                                                               //	Should be called at the end of program as part of cleanup , decontructor with static methods would just constantly deallocate the console. 
 
     public:
@@ -389,17 +404,6 @@ namespace PlayStation2
         static bool                     m_isVisible;                    //  flag for displaying console window
         static std::mutex               m_mutex;                        //  lock to ensure thread safety
         static Console*                 m_instance;                     //  static class instance
-    };
-
-    class Engine
-    {
-    public:
-    
-    public:
-        static Engine*                 GetDefaultInstance();
-
-    private:
-        static Engine*                 m_instance;                     //  static class instance
     };
 
     class Memory
@@ -600,7 +604,6 @@ namespace PlayStation2
 
 #pragma endregion
 
-
 	//----------------------------------------------------------------------------------------------------
 	//									[SECTION] PCSX2 METHODS
 	//-----------------------------------------------------------------------------------
@@ -656,6 +659,14 @@ namespace PlayStation2
 		ConsoleColors_Count
 	};
 	static const PCSX2ConsoleColors DefaultConsoleColor = Color_Default;
+
+	//	
+	enum DXGI : int
+	{
+		IDXGI_PRESENT = 8,
+		IDXGI_DRAW_INDEXED = 12,
+		IDXGI_RESIZE_BUFFERS = 13,
+	};
 
 	//	
 	enum class RenderAPI
@@ -1016,24 +1027,45 @@ namespace PlayStation2
 		static IConsoleWriter_WriteLn_stub WriteLn;
 
 		typedef __int64(__fastcall* IConsoleWriter_cWriteLn_stub)(int, const char*, ...);		//	[ AOB: 48 83 EC ? 48 89 D0 89 CA 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 48 83 EC ]
-		static IConsoleWriter_cWriteLn_stub cWriteLn;
+		static IConsoleWriter_cWriteLn_stub WriteColorLn;
 
 		typedef __int64(__fastcall* IConsoleWriter_Warning_stub)(const char*, ...);				//	[ AOB: 48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 56 57 ]	
+		static IConsoleWriter_Warning_stub WriteWarning;
+
 		typedef __int64(__fastcall* IConsoleWriter_Error_stub)(const char*, ...);				//	[ AOB: 48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 41 57 41 56 41 55 ]	//	Console.Error("EE: Unrecognized op %x", cpuRegs.code);
+		static IConsoleWriter_Error_stub WriteError;
+
 		typedef __int64(__fastcall* IConsoleWriterDev_WriteLn_stub)(const char*, ...);			//	[ AOB: 48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 31 D2 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC CC CC CC 41 57 ]			//	recResetIOP
+		static IConsoleWriterDev_WriteLn_stub DevWriteLn;
+
 		typedef __int64(__fastcall* IConsoleWriterDev_cWriteLn_stub)(int, const char*, ...);	//	[ AOB: 48 83 EC ? 48 89 D0 89 CA 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 56 ]															//	DevCon.WriteLn(Color_Gray, "[R3000 Debugger] Branch to 0x890 (SYSMEM). Clearing modules."); // iopRecRecompile
+		static IConsoleWriterDev_cWriteLn_stub DevColorWriteLn;
+
 		typedef __int64(__fastcall* IConsoleWriterDev_Warning_stub)(const char*, ...);			//	[ AOB: 48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 56 48 81 EC ]	
+		static IConsoleWriterDev_Warning_stub DevWriteWarning;
+
 		typedef __int64(__fastcall* IConsoleWriterDev_Error_stub)(const char*, ...);			//	[ AOB: 48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 41 57 41 56 56 ]	//	DevCon.Error("[IOP] Impossible block clearing failure");
-		
+		static IConsoleWriterDev_Error_stub DevWriteError;
+
 		/*	GENERAL RENDERER HOOKING METHODS
 		*
 		*/
+		typedef void (*RenderGUI)();												//	user render declaration
+		typedef LRESULT (*GUIWndProc)(const HWND, UINT, WPARAM, LPARAM);			//	user windproc declaration
 		typedef HRESULT(WINAPI* IDXGISwapChainPresent)(IDXGISwapChain*, UINT, UINT);
+		typedef HRESULT(WINAPI* ResizeBuffers)(IDXGISwapChain*, UINT, UINT, UINT, DXGI_FORMAT, UINT);
 		static HRESULT hkPresent(IDXGISwapChain*, UINT, UINT);
+		static HRESULT hkResizeBuffers(IDXGISwapChain*, UINT, UINT, UINT, DXGI_FORMAT, UINT);
 		static LRESULT WndProc(const HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+		static void RegisterRenderFunction(RenderGUI p);		//	used to link a function to be executed in hkPresent
+		static void ClearRenderFunction();						//	used to link a function to be executed in hkPresent
+		static RenderGUI fn_Render;								//	called in hkPresent
+		static GUIWndProc fn_wndProc;							//	called in hkPresent
 		static IDXGISwapChainPresent oDXGISwapChainPresent;
+		static ResizeBuffers oIDXGIResizeBuffers;
 		static ID3D11RenderTargetView* D11RenderTarget;
 		static ID3D11DeviceContext* D11DeviceCtx;
+		static IDXGISwapChain* pSwapChain;
 		static ID3D11Device* D3D11Device;
 		static WNDPROC oWndProc;
 		static HWND RenderWindow;
