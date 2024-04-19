@@ -5,6 +5,10 @@
 #define CDK_VERSION		"v1.0.0"			//	? ? ? 
 #define PCSX2_VERSION	"v1.5617"			//	all static offsets are set in accordance to the module version noted here
 
+#define DEARIMGUI		false				//	
+#define DEARIMGUI_MATH	false				//	
+#define MINHOOK			false				//	
+
 /*
 	
 	// [SECTION] Defines
@@ -43,7 +47,7 @@
 #pragma comment(lib, "d3d12.lib")
 #include <dxgi1_4.h>
 
-#ifdef DEARIMGUI
+#if DEARIMGUI
 
 #ifdef DEARIMGUI_MATH
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -58,7 +62,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 
 #endif // DEARIMGUI
 
-#ifdef MINHOOK
+#if MINHOOK
 
 #include <minhook.h>
 

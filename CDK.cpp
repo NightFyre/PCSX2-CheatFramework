@@ -1,5 +1,5 @@
 #pragma once
-#include "CDK.h"
+#include <CDK.h>
 
 /**
  * Name: PlayStation2 - PCSX2
@@ -10,7 +10,7 @@
 namespace PlayStation2
 {
     //----------------------------------------------------------------------------------------------------
-    //										CORE
+    //									CORE
     //-----------------------------------------------------------------------------------
 
     ///---------------------------------------------------------------------------------------------------
@@ -25,11 +25,12 @@ namespace PlayStation2
         if (bDefaultInstances)
         {
             CGlobals::g_console = Console::GetDefaultInstance();
-
+            
             CGlobals::g_engine = Engine::GetDefaultInstance();
 
             CGlobals::g_memory = Memory::GetDefaultInstance();
 
+            Console::SetViewState(true);
             Console::LogMsg("[+] PCSX2 Cheat Device Initialized!\n- PCSX2:\t0x%llX\n- PS2:\t\t0x%llX\n\n",
                 (__int64)pHand,
                 PS2Memory::GetModuleBase()
@@ -40,39 +41,6 @@ namespace PlayStation2
     }
 
     ///---------------------------------------------------------------------------------------------------
-    ///  Custom method for automatically initializing GSDevice
-    //  bool InitCDK(const std::string& moduleName, unsigned int gDevice)
-    //  {
-    //      bool result{ false };
-    //  
-    //      Tools::CPUTimer t;
-    //  
-    //      HANDLE pHand = GetModuleHandleA(moduleName.c_str());
-    //      if (!pHand)
-    //          return result;
-    //  
-    //      PCSX2::g_gs_device = reinterpret_cast<GSDevice*>(*(__int64*)(Memory::GetAddr(gDevice)));
-    //      if (!PCSX2::g_gs_device)
-    //          return false;
-    //  
-    //      CGlobals::g_console = Console::GetDefaultInstance();
-    //      
-    //      CGlobals::g_engine = Engine::GetDefaultInstance();
-    //  
-    //      CGlobals::g_memory = Memory::GetDefaultInstance();
-    //  
-    //      Console::LogMsg("[+][%.3f] PCSX2 Cheat Device Initialized!\n- PCSX2:\t0x%llX\n- PS2:\t\t0x%llX\n- GSDevice:\t0x%llX\n- RenderAPI:\t%d\n\n",
-    //          t.Stop(Tools::CPUTimer::ETimings::ETiming_MS),
-    //          (__int64)pHand,
-    //          PS2Memory::GetModuleBase(), 
-    //          PCSX2::g_gs_device,
-    //          GSDevice::GetRenderAPI()    //  @TODO: get string , its a virtual method . . .
-    //      );
-    //  
-    //      return true;
-    //  }
-
-    ///---------------------------------------------------------------------------------------------------
     // Template Initialization function compatible with Nightly Builds
     bool InitCDK() { return InitCDK("pcsx2-qt.exe", true); }
 
@@ -80,7 +48,7 @@ namespace PlayStation2
     void ShutdownCDK() { Console::DestroyConsole(); }
 
     //----------------------------------------------------------------------------------------------------
-    //										CGLOBALS
+    //									CGLOBALS
     //-----------------------------------------------------------------------------------
 
 #pragma region  //  CGLOBALS
@@ -94,7 +62,7 @@ namespace PlayStation2
 #pragma endregion
 
     //----------------------------------------------------------------------------------------------------
-    //										CONSOLE
+    //									CONSOLE
     //-----------------------------------------------------------------------------------
 
 #pragma region  //  CONSOLE
@@ -164,7 +132,7 @@ namespace PlayStation2
     }	
 
     ///---------------------------------------------------------------------------------------------------
-    void Console::ToggleViewState(bool x) { ShowWindow(GetConsoleWindow(), x ? SW_SHOW : SW_HIDE); m_isVisible = x; }
+    void Console::SetViewState(bool x) { ShowWindow(GetConsoleWindow(), x ? SW_SHOW : SW_HIDE); m_isVisible = x; }
 
     //---------------------------------------------------------------------------------------------------
     void Console::LogMsgEx(FILE* stream, HANDLE pHand, const char* msg, EConsoleColors color, va_list args)
@@ -184,10 +152,10 @@ namespace PlayStation2
         if (!m_isConsoleAllocated)
             return;
         
-        va_list args;												        //	declare arguments
-        va_start(args, text);										        //	get arguments
-        LogMsgEx(m_pOutStream, m_pHandle, text, EConsoleColors::DEFAULT, args);//	print
-        va_end(args);												        //	clear arguments
+        va_list args;												            //	declare arguments
+        va_start(args, text);										            //	get arguments
+        LogMsgEx(m_pOutStream, m_pHandle, text, EConsoleColors::DEFAULT, args); //	print
+        va_end(args);												            //	clear arguments
     }
 
     //---------------------------------------------------------------------------------------------------
@@ -205,7 +173,7 @@ namespace PlayStation2
 #pragma endregion
 
     //----------------------------------------------------------------------------------------------------
-    //										ENGINE
+    //									ENGINE
     //-----------------------------------------------------------------------------------
 
 #pragma region  //  ENGINE
@@ -218,7 +186,7 @@ namespace PlayStation2
 #pragma endregion
 
     //----------------------------------------------------------------------------------------------------
-	//										MEMORY
+	//									MEMORY
 	//-----------------------------------------------------------------------------------
 
 #pragma region  //  MEMORY
@@ -439,7 +407,7 @@ namespace PlayStation2
 #pragma endregion
 
     //----------------------------------------------------------------------------------------------------
-    //									    PS2Memory
+    //									PS2Memory
     //-----------------------------------------------------------------------------------
 
 #pragma region  //  PS2Memory
@@ -481,7 +449,7 @@ namespace PlayStation2
 #pragma endregion
 
     //----------------------------------------------------------------------------------------------------
-	//										TOOLS
+	//									TOOLS
 	//-----------------------------------------------------------------------------------
 
 #pragma region  //  TOOLS
@@ -571,7 +539,7 @@ namespace PlayStation2
 
 
     //----------------------------------------------------------------------------------------------------
-    //										PCSX2
+    //									PCSX2
     //-----------------------------------------------------------------------------------
 
 #pragma region  //  PCSX2
@@ -596,18 +564,29 @@ namespace PlayStation2
     unsigned int                    PCSX2::o_psxRegs{ 0x2EA809C };
     unsigned int                    PCSX2::g_discordPresemt{ 0xE9090 };
     PCSX2::IDXGISwapChainPresent    PCSX2::oDXGISwapChainPresent;   //  value automatically handled
+    PCSX2::ResizeBuffers            PCSX2::oIDXGIResizeBuffers;   //  value automatically handled
     ID3D11RenderTargetView*         PCSX2::D11RenderTarget;         //  value automatically handled
     ID3D11DeviceContext*            PCSX2::D11DeviceCtx;            //  value automatically handled
+    IDXGISwapChain*                 PCSX2::pSwapChain;              //  
     ID3D11Device*                   PCSX2::D3D11Device;             //  value automatically handled
     WNDPROC                         PCSX2::oWndProc;                //  value automatically handled
     HWND                            PCSX2::RenderWindow;            //  value automatically handled
+    PCSX2::RenderGUI                PCSX2::fn_Render;				//	called in hkPresent
+    PCSX2::GUIWndProc               PCSX2::fn_wndProc;				//	called in hkPresent
     bool                            PCSX2::isImGuiInit;             //  value automatically handled
-    bool                            PCSX2::isMenuShown;             //  value automatically handled
+    bool                            PCSX2::isMenuShown;
 
-    //  Runtime Assign Method Pointers
-    PCSX2::IConsoleWriter_WriteLn_stub PCSX2::WriteLn = reinterpret_cast<PCSX2::IConsoleWriter_WriteLn_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 31 D2 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC CC CC CC 48 83 EC"));
-    PCSX2::IConsoleWriter_cWriteLn_stub PCSX2::cWriteLn = reinterpret_cast<PCSX2::IConsoleWriter_cWriteLn_stub>(Memory::SignatureScan("48 83 EC ? 48 89 D0 89 CA 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 48 83 EC"));
-
+    ///  PCSX2 IConsoleWriter
+    PCSX2::IConsoleWriter_WriteLn_stub PCSX2::WriteLn               = reinterpret_cast<PCSX2::IConsoleWriter_WriteLn_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 31 D2 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC CC CC CC 48 83 EC"));
+    PCSX2::IConsoleWriter_cWriteLn_stub PCSX2::WriteColorLn         = reinterpret_cast<PCSX2::IConsoleWriter_cWriteLn_stub>(Memory::SignatureScan("48 83 EC ? 48 89 D0 89 CA 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 48 83 EC"));
+    PCSX2::IConsoleWriter_Warning_stub PCSX2::WriteWarning          = reinterpret_cast<PCSX2::IConsoleWriter_Warning_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 56 57"));
+    PCSX2::IConsoleWriter_Error_stub PCSX2::WriteError              = reinterpret_cast<PCSX2::IConsoleWriter_Warning_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 41 57 41 56 41 55"));
+    PCSX2::IConsoleWriterDev_WriteLn_stub PCSX2::DevWriteLn         = reinterpret_cast<PCSX2::IConsoleWriterDev_WriteLn_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 31 D2 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC CC CC CC 41 57"));
+    PCSX2::IConsoleWriterDev_cWriteLn_stub PCSX2::DevColorWriteLn   = reinterpret_cast<PCSX2::IConsoleWriterDev_cWriteLn_stub>(Memory::SignatureScan("48 83 EC ? 48 89 D0 89 CA 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 56"));
+    PCSX2::IConsoleWriterDev_Warning_stub PCSX2::DevWriteWarning    = reinterpret_cast<PCSX2::IConsoleWriterDev_Warning_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 56 48 81 EC"));
+    PCSX2::IConsoleWriterDev_Error_stub PCSX2::DevWriteError        = reinterpret_cast<PCSX2::IConsoleWriterDev_Error_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 41 57 41 56 56"));
+    
+    
     //-----------------------------------------------------------------------------------
     void PCSX2::ResetEE()
     {
@@ -640,79 +619,85 @@ namespace PlayStation2
     //  
     LRESULT PCSX2::WndProc(const HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     {
-        //  @NOTE: Dear ImGui must be present
-        //  if (isMenuShown)
-        //  {
-        //      ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam);
-        //      return true;
-        //  }
 
+        if (fn_wndProc)
+            return fn_wndProc(hwnd, msg, wparam, lparam);
+        
         return CallWindowProcA(oWndProc, hwnd, msg, wparam, lparam);
+    }
+
+    //-----------------------------------------------------------------------------------
+    //  
+    HRESULT PCSX2::hkResizeBuffers(IDXGISwapChain* p, UINT bufferCount, UINT Width, UINT Height, DXGI_FORMAT fmt, UINT scFlags)
+    {
+        //  Get new data & release render target
+        pSwapChain = p;
+        D11RenderTarget->Release();
+        D11RenderTarget = nullptr;
+
+        //  get fn result
+        HRESULT result = oIDXGIResizeBuffers(p, bufferCount, Width, Height, fmt, scFlags);
+        
+        // Get new render target
+        ID3D11Texture2D* backBuffer;
+        p->GetBuffer(0, __uuidof(ID3D11Texture2D*), (LPVOID*)&backBuffer);
+        if (backBuffer)
+        {
+            D3D11Device->CreateRenderTargetView(backBuffer, 0, &D11RenderTarget);
+            backBuffer->Release();
+        }
+
+#if DEARIMGUI
+
+        //  Reset ImGui 
+        if (isImGuiInit)
+        {
+            ImGuiIO& io = ImGui::GetIO();
+            io.DisplaySize = ImVec2(static_cast<float>(Width), static_cast<float>(Height));
+        }
+
+#endif
+
+        return result;
     }
 
     //-----------------------------------------------------------------------------------
     //  
     HRESULT PCSX2::hkPresent(IDXGISwapChain* p, UINT sync, UINT flags)
     {
-        /// @NOTE: Dear ImGui must be present
-        //  if (!isImGuiInit)
-        //  {
-        //      if (SUCCEEDED(p->GetDevice(__uuidof(ID3D11Device), (void**)&D3D11Device)))
-        //      {
-        //          D3D11Device->GetImmediateContext(&D11DeviceCtx);
-        //          DXGI_SWAP_CHAIN_DESC sd;
-        //          p->GetDesc(&sd);
-        //  
-        //          RenderWindow = sd.OutputWindow;
-        //          ID3D11Texture2D* buffer;
-        //          p->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&buffer);
-        //          D3D11Device->CreateRenderTargetView(buffer, NULL, &D11RenderTarget);
-        //  
-        //          buffer->Release();
-        //          oWndProc = (WNDPROC)SetWindowLongPtrA(RenderWindow, GWLP_WNDPROC, (LONG_PTR)WndProc);
-        //  
-        //          ImGui::CreateContext();
-        //  
-        //          auto& io = ImGui::GetIO();
-        //          io.LogFilename = nullptr;
-        //          io.IniFilename = nullptr;
-        //  
-        //          ImGui_ImplWin32_Init(RenderWindow);
-        //          ImGui_ImplDX11_Init(D3D11Device, D11DeviceCtx);
-        //  
-        //          isImGuiInit = true;
-        //      }
-        //  
-        //      else
-        //          return oDXGISwapChainPresent(p, sync, flags);
-        //  }
-        //  
-        //  ImGui_ImplDX11_NewFrame();
-        //  ImGui_ImplWin32_NewFrame();
-        //  ImGui::NewFrame();
-        //  
-        //  if (Tools::GetKeyState(VK_HOME, 500))
-        //      isMenuShown ^= 1;
-        //  
-        //  if (isMenuShown)
-        //  {
-        //      ImGui::Begin("[PCSX2] Cheat Device", 0, 0);
-        //      ImGui::Text("Hello World!");
-        //      ImGui::End();
-        //  }
-        //  
-        //  ImGui::Render();
-        //  
-        //  device_context->OMSetRenderTargets(1, &D11RenderTarget, NULL);
-        //  ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+#if DEARIMGUI
+        
+        //  Check for linked function
+        if (fn_Render && isImGuiInit)
+        {
+            ImGui_ImplDX11_NewFrame();
+            ImGui_ImplWin32_NewFrame();
+            ImGui::NewFrame();
+
+            fn_Render();
+
+            ImGui::Render();
+            D11DeviceCtx->OMSetRenderTargets(1, &D11RenderTarget, NULL);
+            ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+        }
+
+#endif
 
         return oDXGISwapChainPresent(p, sync, flags);
     }
 
+    //-----------------------------------------------------------------------------------
+    //  
+    void PCSX2::RegisterRenderFunction(PCSX2::RenderGUI p) { fn_Render = p; }
+
+    //-----------------------------------------------------------------------------------
+    //  
+    void PCSX2::ClearRenderFunction() { fn_Render = 0; }
+
 #pragma endregion
 
     //----------------------------------------------------------------------------------------------------
-    //										GSDevice
+    //									GSDevice
     //-----------------------------------------------------------------------------------
 
 #pragma region  //  GSDevice
@@ -729,7 +714,7 @@ namespace PlayStation2
     //									GSDevice::GSDevice11
     //-----------------------------------------------------------------------------------
 
-#pragma region  //  GSDevice::GSDevice11
+#pragma region  //  GSDevice::GSDevice12
 
     bool GSDevice11::isValidSwapChain() { return m_swap_chain != nullptr; }
     
