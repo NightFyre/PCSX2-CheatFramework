@@ -124,6 +124,7 @@ LRESULT WndProc(const HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 //---------------------------------------------------------------------------------------------------
 //  initialize dear imgui
+//  @ERROR: ImGui is not capturing keyboard navigation ???
 void InitImGui()
 {
     if (SUCCEEDED(PlayStation2::PCSX2::pSwapChain->GetDevice(__uuidof(ID3D11Device), (void**)&PlayStation2::PCSX2::D3D11Device)))
@@ -174,7 +175,7 @@ void RenderImGui()
         MENU();
 
     //  Render Heads Up Display
-    //  HUD();
+    HUD();
 
 }
 
