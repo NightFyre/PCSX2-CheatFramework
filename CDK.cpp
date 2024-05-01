@@ -572,7 +572,6 @@ namespace PlayStation2
     WNDPROC                         PCSX2::oWndProc;                //  value automatically handled
     HWND                            PCSX2::RenderWindow;            //  value automatically handled
     PCSX2::RenderGUI                PCSX2::fn_Render;				//	called in hkPresent
-    PCSX2::GUIWndProc               PCSX2::fn_wndProc;				//	called in hkPresent
     bool                            PCSX2::isImGuiInit;             //  value automatically handled
     bool                            PCSX2::isMenuShown;
 
@@ -620,9 +619,17 @@ namespace PlayStation2
     LRESULT PCSX2::WndProc(const HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     {
 
-        if (fn_wndProc)
-            return fn_wndProc(hwnd, msg, wparam, lparam);
-        
+#if DEARIMGUI
+
+        //  Handle window message events when the window is shown
+        if (isMenuShown)
+        {
+            ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam);
+
+            return true;
+        }
+#endif
+
         return CallWindowProcA(oWndProc, hwnd, msg, wparam, lparam);
     }
 

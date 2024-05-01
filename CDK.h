@@ -5,7 +5,6 @@
 #define CDK_VERSION		"v1.0.0"			//	? ? ? 
 #define PCSX2_VERSION	"v1.5617"			//	all static offsets are set in accordance to the module version noted here
 
-#define DEARIMGUI		true				//	
 #define DEARIMGUI_MATH	false				//	
 #define MINHOOK			false				//	
 
@@ -47,9 +46,7 @@
 #pragma comment(lib, "d3d12.lib")
 #include <dxgi1_4.h>
 
-#if DEARIMGUI
-
-#ifdef DEARIMGUI_MATH
+#if DEARIMGUI_MATH
 #define IMGUI_DEFINE_MATH_OPERATORS
 #endif
 
@@ -59,14 +56,6 @@
 #include <backends/imgui_impl_dx11.h>
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-#endif // DEARIMGUI
-
-#if MINHOOK
-
-#include <minhook.h>
-
-#endif	//	MINHOOK
 
 namespace PlayStation2
 {
@@ -1055,7 +1044,6 @@ namespace PlayStation2
 		*
 		*/
 		typedef void (*RenderGUI)();												//	user render declaration
-		typedef LRESULT (*GUIWndProc)(const HWND, UINT, WPARAM, LPARAM);			//	user windproc declaration
 		typedef HRESULT(WINAPI* IDXGISwapChainPresent)(IDXGISwapChain*, UINT, UINT);
 		typedef HRESULT(WINAPI* ResizeBuffers)(IDXGISwapChain*, UINT, UINT, UINT, DXGI_FORMAT, UINT);
 		static HRESULT hkPresent(IDXGISwapChain*, UINT, UINT);
@@ -1064,7 +1052,6 @@ namespace PlayStation2
 		static void RegisterRenderFunction(RenderGUI p);		//	used to link a function to be executed in hkPresent
 		static void ClearRenderFunction();						//	used to link a function to be executed in hkPresent
 		static RenderGUI fn_Render;								//	called in hkPresent
-		static GUIWndProc fn_wndProc;							//	called in hkPresent
 		static IDXGISwapChainPresent oDXGISwapChainPresent;
 		static ResizeBuffers oIDXGIResizeBuffers;
 		static ID3D11RenderTargetView* D11RenderTarget;
