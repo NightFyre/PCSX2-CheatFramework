@@ -69,20 +69,26 @@ bool PCSX2Memory::ResolveProcess(const std::string& pName, pcsx2_t& pInfo)
 	pInfo.uBaseAddress = (long long)me32.modBaseAddr;	//	module base address
 
 	///	OBTAIN HANDLE TO PROCESS
-	g_pcsx.hProc = OpenProcess(PROCESS_ALL_ACCESS, false, g_pcsx.dwProcID);
-	if (g_pcsx.hProc == INVALID_HANDLE_VALUE)
+	pInfo.hProc = OpenProcess(PROCESS_ALL_ACCESS, false, g_pcsx.dwProcID);
+	if (pInfo.hProc == INVALID_HANDLE_VALUE)
 	{
 		pInfo = pcsx2_t();
 		return false;
 	}
 
-	/// GET EEMem
+	return true;
+
+	//	GET EE MEMORY
+	//	return GetProcAddressEx(pInfo, "EEmem", pInfo.uEEmem) > 0;
+}
+
+__i64 PCS2Memory::GetProcAddressEx(const pcsx2_t& pInfo, const std::string& name, __i64& result)
+{
+	result = 0;	//	set invalid pointer
+
 	auto dosHeader = Read<IMAGE_DOS_HEADER>(pInfo.uBaseAddress);
 	if (dosHeader.e_magic != IMAGE_DOS_SIGNATURE)
-	{
-		pInfo = pcsx2_t();
 		return false;
-	}
 
 	auto ntHeader = Read<IMAGE_NT_HEADERS>(pInfo.uBaseAddress + dosHeader.e_lfanew);
 	for (IMAGE_DATA_DIRECTORY& directory : ntHeader.OptionalHeader.DataDirectory)
@@ -103,28 +109,18 @@ bool PCSX2Memory::ResolveProcess(const std::string& pName, pcsx2_t& pInfo)
 			if (!ReadString(pInfo.uBaseAddress + nameOffset, name))
 				continue;
 
-			if (name != "EEmem")
+			if (name != name.c_str())	//	@TODO: case sensitive
 				continue;
 
-			auto addr = Read<__i64>(pInfo.uBaseAddress + fnOffset);
-			if (addr)
-			{
-				pInfo.uEEmem = addr;
-				break;
-			}
-			else
-			{
-				// bad error this shouldnt happen ; game is not running
-				pInfo = pcsx2_t();
-				return false;
-			}
+			result = Read<__i64>(pInfo.uBaseAddress + fnOffset);
+			break;
 		}
 
-		if (pInfo.uEEmem)
+		if (result)
 			break;
 	}
 
-	return true;
+	return result;
 }
 
 __i64 PCSX2Memory::GetAddr(const __i32& offset)

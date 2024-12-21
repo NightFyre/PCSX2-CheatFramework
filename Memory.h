@@ -31,6 +31,10 @@ public:
 	bool bValidInstance{ false };
 
 public:
+
+	//	returns the virtual address of an exported name from the export address table
+	static __i64 GetProcAddressEx(const pcsx2_t& moduleInfo, const std::string& name, __i64& result);
+	
 	//	returns eemem + offset
 	static __i64 GetAddr(const __i32& offset);
 
