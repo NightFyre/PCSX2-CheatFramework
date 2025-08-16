@@ -13,45 +13,21 @@ This framework provides tools to port older codes to a more modern approach, usi
 - Access EE & IOP Registers during execution
 
 ## USAGE
-1. include the SDK header as well as any required packages.  
-*NOTE: Engine_Package.h is a required package and needs to be manually included.*
+1. include the CDK header as well as any required packages.  
  - `CDK.h`                  //  Including the SDK header will provide access to all the most necessary features.
- - `Core_Package.cpp`       //  Main Package and must be included for basic usage 
- - `PCSX2_Package.cpp`      //  PCSX2 specific members and functions. Like the rendering API's for instance
+ - `CDK.cpp`                //  make sure to include the source file to your project , otherwise attempting to use any methods will result in an "unresolved external error"
 
-2. Initialize the SDK
- - `PlayStation2::InitCDK();`   //  Basic CDK Initialization
+2. Initialize the Cheat Device
+https://github.com/NightFyre/PCSX2-CheatFramework/blob/4bccdd509105c2238ac33f16fbafd11f3883dc44/CDK.h#L73-L74
 
-3. Do Stuff
-https://github.com/NightFyre/PCSX2-CheatFramework/blob/70dcf7dc51747df014f5d537a3188b8de1fe95a2/dllmain.cpp#L18-L29
+3. make cheats
+https://github.com/NightFyre/PlayStation2-Game-SDKs/blob/f68b2654d8112d883a7441be9a5000230cc55f15/SOCOM%20U.S%20Navy%20Seals/SOCOM1_package.cpp#L120-L137
 
-4. (optional) include game package for additional controls
+4. include game package for additional controls
+https://github.com/NightFyre/PCSX2-CheatFramework/blob/f7469873e8787f6efe29a19cdc813ef3f7f1e913/examples/GamePackage/dllmain.cpp#L3
 
 ## USAGE EXAMPLES
-
-- Access EE Memory
-https://github.com/NightFyre/PCSX2-CheatFramework/blob/b2ae5a44d7c1452256920c4af81f745cdf0df2f3/examples/GameMemory/dllmain.cpp#L33-L34
-
-- Get Virtual Address
-https://github.com/NightFyre/PCSX2-CheatFramework/blob/b2ae5a44d7c1452256920c4af81f745cdf0df2f3/examples/GameMemory/dllmain.cpp#L37-L38
-
-- Read Virtual Memory
-https://github.com/NightFyre/PCSX2-CheatFramework/blob/b2ae5a44d7c1452256920c4af81f745cdf0df2f3/examples/GameMemory/dllmain.cpp#L41-L47
-
-- Access Class Members via GamePackages 
-```cpp
-/// SOCOM 1 -> Access SealObject & Modify Weapon Ammo
-{
-    // Create an instance of the Offsets Class
-    SOCOM1::CZSeal* pLocalSeal = SOCOM1::CZSeal::GetDefaultInstance();
-    if (pLocalSeal)
-        Console::cLogMsg("[+][PCSX2-CDK][SOCOM] LocalSeal Name: %s\n", EConsoleColors::green, pLocalSeal->GetName().c_str());
-}
-```
-
-- Hook Rendering API
-https://github.com/NightFyre/PCSX2-CheatFramework/blob/7c786cdd3e7f8c0855bc7d1f83df687092424604/examples/Rendering/dllmain.cpp#L44-L51
-
+For all examples please check the `examples` branch.
 
 ### References & Credits
 - [PCSX2](https://github.com/PCSX2/pcsx2)
