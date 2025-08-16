@@ -5,6 +5,7 @@
 #define CDK_VERSION		"v1.0.0"			//	? ? ? 
 #define PCSX2_VERSION	"v1.5617"			//	all static offsets are set in accordance to the module version noted here
 
+#define DEARIMGUI		false				//	
 #define DEARIMGUI_MATH	false				//	
 #define MINHOOK			false				//	
 
@@ -40,6 +41,7 @@
 #pragma comment(lib, "XInput.lib")
 
 //	RENDERING APIS
+#if DEARIMGUI
 #include <d3d11.h>
 #pragma comment(lib, "d3d11.lib")
 #include <d3d12.h>
@@ -56,6 +58,14 @@
 #include <backends/imgui_impl_dx11.h>
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+#endif // DEARIMGUI
+
+#if MINHOOK
+
+#include <minhook.h>
+
+#endif	//	MINHOOK
 
 namespace PlayStation2
 {
@@ -83,33 +93,33 @@ namespace PlayStation2
 
 #pragma region	//	CORE STRUCTS
 
-	struct Vector2
+	struct Vec2
 	{
 		float x, y;
-		Vector2() : x(0), y(0) {}
-		Vector2(float x, float y) : x(x), y(y) {}
+		Vec2() : x(0), y(0) {}
+		Vec2(float x, float y) : x(x), y(y) {}
 
 
 		// Addition operator
-		Vector2 operator+(const Vector2& other) const { return Vector2(x + other.x, y + other.y); }
+		Vec2 operator+(const Vec2& other) const { return Vec2(x + other.x, y + other.y); }
 
 		// Subtraction operator
-		Vector2 operator-(const Vector2& other) const { return Vector2(x - other.x, y - other.y); }
+		Vec2 operator-(const Vec2& other) const { return Vec2(x - other.x, y - other.y); }
 
 		// Scalar multiplication operator
-		Vector2 operator*(float scalar) const { return Vector2(x * scalar, y * scalar); }
+		Vec2 operator*(float scalar) const { return Vec2(x * scalar, y * scalar); }
 
 		//	Scalar division operator
-		Vector2 operator/(float scalar) const { return Vector2{ x / scalar, y / scalar }; }
+		Vec2 operator/(float scalar) const { return Vec2{ x / scalar, y / scalar }; }
 
 		//	float* return operator
-		Vector2 operator=(float* other) const { return Vector2{ other[0], other[1] }; }
+		Vec2 operator=(float* other) const { return Vec2{ other[0], other[1] }; }
 
 		// Dot product operator
-		float operator*(const Vector2& other) const { return x * other.x + y * other.y; }
+		float operator*(const Vec2& other) const { return x * other.x + y * other.y; }
 
 		//	
-		Vector2& operator*=(const Vector2& other)
+		Vec2& operator*=(const Vec2& other)
 		{
 			x += other.x;
 			y += other.y;
@@ -117,7 +127,7 @@ namespace PlayStation2
 		}
 
 		// Scalar multiplication and assignment operator
-		Vector2 operator*=(float scalar) {
+		Vec2 operator*=(float scalar) {
 			x *= scalar;
 			y *= scalar;
 			return *this;
@@ -137,35 +147,50 @@ namespace PlayStation2
 		}
 	};
 
-	struct Vector3
+	struct Vec3
 	{
 		float x, y, z;
-		Vector3() : x(0), y(0), z(0) {}
-		Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
+		Vec3() : x(0), y(0), z(0) {}
+		Vec3(float x, float y, float z) : x(x), y(y), z(z) {}
 
 		// Addition operator
-		Vector3 operator+(const Vector3& other) const { return Vector3{ x + other.x, y + other.y, z + other.z }; }
+		Vec3 operator+(const Vec3& other) const { return Vec3{ x + other.x, y + other.y, z + other.z }; }
 
 		// Subtraction operator
-		Vector3 operator-(const Vector3& other) const { return Vector3{ x - other.x, y - other.y, z - other.z }; }
+		Vec3 operator-(const Vec3& other) const { return Vec3{ x - other.x, y - other.y, z - other.z }; }
 
 		// Scalar multiplication operator
-		Vector3 operator*(float scalar) const { return Vector3{ x * scalar, y * scalar, z * scalar }; }
+		Vec3 operator*(float scalar) const { return Vec3{ x * scalar, y * scalar, z * scalar }; }
 
 		//	Scalar division operator
-		Vector3 operator/(float scalar) const { return Vector3{ x / scalar, y / scalar, z / scalar }; }
+		Vec3 operator/(float scalar) const { return Vec3{ x / scalar, y / scalar, z / scalar }; }
 
 		// Dot product operator
-		float operator*(const Vector3& other) const { return x * other.x + y * other.y + z * other.z; }
+		float operator*(const Vec3& other) const { return x * other.x + y * other.y + z * other.z; }
 
 		// Cross product operator
-		Vector3 operator^(const Vector3& other) const { return Vector3(y * other.z - z * other.y, z * other.x - x * other.z, x * other.y - y * other.x); }
+		Vec3 operator^(const Vec3& other) const { return Vec3(y * other.z - z * other.y, z * other.x - x * other.z, x * other.y - y * other.x); }
 
 		//	
-		Vector3 operator=(float* other) const { return Vector3{ other[0], other[1], other[2] }; }
+		Vec3 operator=(float* other) const { return Vec3{ other[0], other[1], other[2] }; }
 
-		//	
-		Vector3& operator*=(const Vector3& other)
+		Vec3& operator+=(const float* other)
+		{
+			x += other[0];
+			y += other[1];
+			z += other[2];
+			return *this;
+		}
+
+		Vec3& operator-=(const float* other)
+		{
+			x -= other[0];
+			y -= other[1];
+			z -= other[2];
+			return *this;
+		}
+
+		Vec3& operator+=(const Vec3& other)
 		{
 			x += other.x;
 			y += other.y;
@@ -173,7 +198,40 @@ namespace PlayStation2
 			return *this;
 		}
 
-		bool operator==(Vector3 other) const { return other.x == x && other.y == y && other.z == z; }
+		Vec3& operator-=(const Vec3& other)
+		{
+			x -= other.x;
+			y -= other.y;
+			z -= other.z;
+			return *this;
+		}
+
+		//	
+		Vec3& operator*=(const Vec3& other)
+		{
+			x += other.x;
+			y += other.y;
+			z += other.z;
+			return *this;
+		}
+
+		Vec3 operator*=(const float scalar)
+		{
+			x *= scalar;
+			y *= scalar;
+			z *= scalar;
+			return *this;
+		}
+
+		bool operator==(Vec3 other) const { return other.x == x && other.y == y && other.z == z; }
+
+		bool isValid()
+		{
+			return x == 0.0f && y == 0.0f;
+		}
+
+		//	get the dot product 
+		float dot(const Vec3& other) { return x * other.x + y * other.y + z * other.z; }
 
 		// Length (magnitude) of the vector
 		float length() const { return std::sqrt(x * x + y * y + z * z); }
@@ -190,32 +248,32 @@ namespace PlayStation2
 		}
 	};
 
-	struct Vector4
+	struct Vec4
 	{
 		float x, y, z, w;
-		Vector4() : x(0), y(0), z(0), w(w) {}
-		Vector4(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
+		Vec4() : x(0), y(0), z(0), w(w) {}
+		Vec4(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
 
 		// Addition operator
-		Vector4 operator+(const Vector4& other) const { return Vector4(x + other.x, y + other.y, z + other.z, w + other.w); }
+		Vec4 operator+(const Vec4& other) const { return Vec4(x + other.x, y + other.y, z + other.z, w + other.w); }
 
 		// Subtraction operator
-		Vector4 operator-(const Vector4& other) const { return Vector4(x - other.x, y - other.y, z - other.z, w - other.w); }
+		Vec4 operator-(const Vec4& other) const { return Vec4(x - other.x, y - other.y, z - other.z, w - other.w); }
 
 		// Scalar multiplication operator
-		Vector4 operator*(float scalar) const { return Vector4(x * scalar, y * scalar, z * scalar, w * scalar); }
+		Vec4 operator*(float scalar) const { return Vec4(x * scalar, y * scalar, z * scalar, w * scalar); }
 
 		// Scalar division operator
-		Vector4 operator/(float scalar) const { return Vector4{ x / scalar, y / scalar, z / scalar , w / scalar }; }
+		Vec4 operator/(float scalar) const { return Vec4{ x / scalar, y / scalar, z / scalar , w / scalar }; }
 
 		// Dot product operator
-		float operator*(const Vector4& other) const { return x * other.x + y * other.y + z * other.z + w * other.w; }
+		float operator*(const Vec4& other) const { return x * other.x + y * other.y + z * other.z + w * other.w; }
 
 		//	
-		Vector4 operator=(float* other) const { return Vector4{ other[0], other[1], other[2] , other[3] }; }
+		Vec4 operator=(float* other) const { return Vec4{ other[0], other[1], other[2] , other[3] }; }
 
 		//	
-		Vector4& operator*=(const Vector4& other)
+		Vec4& operator*=(const Vec4& other)
 		{
 			x += other.x;
 			y += other.y;
@@ -240,20 +298,20 @@ namespace PlayStation2
 		}
 	};
 
-	struct Matrix2x3
+	struct Mat2x3
 	{
-		Vector2 TopRow, MiddleRow, BottomRow;
+		Vec2 TopRow, MiddleRow, BottomRow;
 
 		// Matrix addition operator
-		Matrix2x3 operator+(const Matrix2x3& other) const { return Matrix2x3{ TopRow + other.TopRow, MiddleRow + other.MiddleRow, BottomRow + other.BottomRow }; }
+		Mat2x3 operator+(const Mat2x3& other) const { return Mat2x3{ TopRow + other.TopRow, MiddleRow + other.MiddleRow, BottomRow + other.BottomRow }; }
 
 		// Matrix subtraction operator
-		Matrix2x3 operator-(const Matrix2x3& other) const { return Matrix2x3{ TopRow - other.TopRow, MiddleRow - other.MiddleRow, BottomRow - other.BottomRow }; }
+		Mat2x3 operator-(const Mat2x3& other) const { return Mat2x3{ TopRow - other.TopRow, MiddleRow - other.MiddleRow, BottomRow - other.BottomRow }; }
 
 		// Matrix-scalar multiplication operator
-		Matrix2x3 operator*(float scalar) const { return Matrix2x3{ TopRow * scalar, MiddleRow * scalar, BottomRow * scalar }; }
+		Mat2x3 operator*(float scalar) const { return Mat2x3{ TopRow * scalar, MiddleRow * scalar, BottomRow * scalar }; }
 
-		bool isZeroMatrix(const Matrix2x3& matrix) {
+		bool isZeroMatrix(const Mat2x3& matrix) {
 			if (matrix.TopRow.x == 0 && matrix.TopRow.y == 0 &&
 				matrix.MiddleRow.x == 0 && matrix.MiddleRow.y == 0 &&
 				matrix.BottomRow.x == 0 && matrix.BottomRow.y == 0) {
@@ -263,20 +321,29 @@ namespace PlayStation2
 		}
 	};
 
-	struct Matrix3x3
+	struct Mat3x3
 	{
-		Vector3 TopRow, MiddleRow, BottomRow;
+		Vec3 TopRow, MiddleRow, BottomRow;
 
 		// Matrix addition operator
-		Matrix3x3 operator+(const Matrix3x3& other) const { return Matrix3x3{ TopRow + other.TopRow, MiddleRow + other.MiddleRow, BottomRow + other.BottomRow }; }
+		Mat3x3 operator+(const Mat3x3& other) const { return Mat3x3{ TopRow + other.TopRow, MiddleRow + other.MiddleRow, BottomRow + other.BottomRow }; }
 
 		// Matrix subtraction operator
-		Matrix3x3 operator-(const Matrix3x3& other) const { return Matrix3x3{ TopRow - other.TopRow, MiddleRow - other.MiddleRow, BottomRow - other.BottomRow }; }
+		Mat3x3 operator-(const Mat3x3& other) const { return Mat3x3{ TopRow - other.TopRow, MiddleRow - other.MiddleRow, BottomRow - other.BottomRow }; }
 
 		// Matrix-scalar multiplication operator
-		Matrix3x3 operator*(float scalar) const { return Matrix3x3{ TopRow * scalar, MiddleRow * scalar, BottomRow * scalar }; }
+		Mat3x3 operator*(float scalar) const { return Mat3x3{ TopRow * scalar, MiddleRow * scalar, BottomRow * scalar }; }
 
-		bool isZeroMatrix(const Matrix3x3& matrix) {
+		Vec3 operator*(const Vec3& other) const
+		{
+			return Vec3(
+				TopRow.x * other.x + MiddleRow.x * other.y + BottomRow.x * other.z,
+				TopRow.y * other.x + MiddleRow.y * other.y + BottomRow.y * other.z,
+				TopRow.z * other.x + MiddleRow.z * other.y + BottomRow.z * other.z
+			);
+		}
+
+		bool isZeroMatrix(const Mat3x3& matrix) {
 			if (matrix.TopRow.x == 0 && matrix.TopRow.y == 0 && matrix.TopRow.z == 0 &&
 				matrix.MiddleRow.x == 0 && matrix.MiddleRow.y == 0 && matrix.MiddleRow.z == 0 &&
 				matrix.BottomRow.x == 0 && matrix.BottomRow.y == 0 && matrix.BottomRow.z == 0) {
@@ -286,25 +353,102 @@ namespace PlayStation2
 		}
 	};
 
-	struct Matrix4x3
+	struct Mat4x3
 	{
-		Vector4 TopRow, MiddleRow, BottomRow;
+		Vec4 TopRow, MiddleRow, BottomRow;
 
 		// Matrix addition operator
-		Matrix4x3 operator+(const Matrix4x3& other) const { return Matrix4x3{ TopRow + other.TopRow, MiddleRow + other.MiddleRow, BottomRow + other.BottomRow }; }
+		Mat4x3 operator+(const Mat4x3& other) const { return Mat4x3{ TopRow + other.TopRow, MiddleRow + other.MiddleRow, BottomRow + other.BottomRow }; }
 
 		// Matrix subtraction operator
-		Matrix4x3 operator-(const Matrix4x3& other) const { return Matrix4x3{ TopRow - other.TopRow, MiddleRow - other.MiddleRow, BottomRow - other.BottomRow }; }
+		Mat4x3 operator-(const Mat4x3& other) const { return Mat4x3{ TopRow - other.TopRow, MiddleRow - other.MiddleRow, BottomRow - other.BottomRow }; }
 
 		// Matrix-scalar multiplication operator
-		Matrix4x3 operator*(float scalar) const { return Matrix4x3{ TopRow * scalar, MiddleRow * scalar, BottomRow * scalar }; }
+		Mat4x3 operator*(float scalar) const { return Mat4x3{ TopRow * scalar, MiddleRow * scalar, BottomRow * scalar }; }
 
-		bool isZeroMatrix(const Matrix4x3& matrix) {
+		bool isZeroMatrix(const Mat4x3& matrix) {
 			if (matrix.TopRow.x == 0 && matrix.TopRow.y == 0 && matrix.TopRow.z == 0 && matrix.TopRow.w == 0 &&
 				matrix.MiddleRow.x == 0 && matrix.MiddleRow.y == 0 && matrix.MiddleRow.z == 0 && matrix.MiddleRow.w == 0 &&
 				matrix.BottomRow.x == 0 && matrix.BottomRow.y == 0 && matrix.BottomRow.z == 0 && matrix.BottomRow.w == 0) {
 				return true;
 			}
+			return false;
+		}
+	};
+
+	struct Mat4x4
+	{
+		Vec4 r[4];
+
+		Vec4 operator*(const Vec4& other) const
+		{
+			return Vec4(
+				r[0].x * other.x + r[1].x * other.y + r[2].x * other.z + r[3].x * other.w,
+				r[0].y * other.x + r[1].y * other.y + r[2].y * other.z + r[3].y * other.w,
+				r[0].z * other.x + r[1].z * other.y + r[2].z * other.z + r[3].z * other.w,
+				r[0].w * other.x + r[1].w * other.y + r[2].w * other.z + r[3].w * other.w
+			);
+		};
+
+		Mat4x4 operator*(const Mat4x4& other) const
+		{
+			Mat4x4 result;
+
+			for (int i = 0; i < 4; ++i)
+			{
+				result.r[i].x = r[i].x * other.r[0].x + r[i].y * other.r[1].x + r[i].z * other.r[2].x + r[i].w * other.r[3].x;
+				result.r[i].y = r[i].x * other.r[0].y + r[i].y * other.r[1].y + r[i].z * other.r[2].y + r[i].w * other.r[3].y;
+				result.r[i].z = r[i].x * other.r[0].z + r[i].y * other.r[1].z + r[i].z * other.r[2].z + r[i].w * other.r[3].z;
+				result.r[i].w = r[i].x * other.r[0].w + r[i].y * other.r[1].w + r[i].z * other.r[2].w + r[i].w * other.r[3].w;
+			}
+
+			return result;
+		}
+	};
+
+	struct AABB
+	{
+		Vec3 m_min;
+		Vec3 m_max;
+
+		AABB()
+		{
+			m_min = Vec3();
+			m_max = Vec3();
+		}
+
+		AABB(Vec3 mmin, Vec3 mmax)
+		{
+			m_min = mmin;
+			m_max = mmax;
+		}
+
+		AABB operator+(const Vec3& offset) const
+		{
+			return AABB(m_min + offset, m_max + offset);
+		};
+
+		float GetWidth() const { return GetSize().x; }
+		float GetHeight() const { return GetSize().y; }
+		float GetDepth() const { return GetSize().z; }
+		Vec3 GetExtents() const { return GetSize() * .5f; }
+		Vec3 GetCenter() const { return (m_min + m_max) * 0.5f; }
+		Vec3 GetSize() const { return m_max - m_min; }
+
+		bool GetBoxVerts()
+		{
+			Vec3 boxVerts[8] =
+			{
+				{ m_min.x, m_min.y, m_min.z },	//	vert0	//		   5--------------6
+				{ m_max.x, m_min.y, m_min.z },	//	vert1	//	   	 / |            / |
+				{ m_max.x, m_min.y, m_max.z },	//	vert2	//	    4--------------7  |
+				{ m_min.x, m_min.y, m_max.z },	//	vert3	//	    |  |           |  |
+				{ m_min.x, m_max.y, m_min.z },	//	vert4	//	    |  1-----------|--2
+				{ m_max.x, m_max.y, m_min.z },	//	vert5	//	    | /            | /
+				{ m_max.x, m_max.y, m_max.z },	//	vert6	//	    |/             |/
+				{ m_min.x, m_max.y, m_max.z },	//	vert7	//	    0--------------3
+			};
+
 			return false;
 		}
 	};
@@ -321,7 +465,7 @@ namespace PlayStation2
 		std::string		m_ModulePath;
 		int				m_WindowWidth;
 		int				m_WindowHeight;
-		Vector2			m_WindowSize{};
+		Vec2			m_WindowSize{};
 	};
 
 	enum EConsoleColors : int 
@@ -363,8 +507,6 @@ namespace PlayStation2
 	class Engine
 	{
 	public:
-
-	public:
 		static Engine* GetDefaultInstance();
 
 	private:
@@ -373,7 +515,6 @@ namespace PlayStation2
 
     class Console
     {
-
     public:
         static Console*                 GetDefaultInstance();
         static void                     LogMsgEx(FILE* stream, HANDLE pHand, const char* msg, EConsoleColors color, va_list args);      //  Logs message to the console
@@ -483,8 +624,8 @@ namespace PlayStation2
             Example Usage: Get float Position of Object
                 -   PS2Memory::ReadLong<float>(address);
             
-            Example Usage: Get Vector3 Position of Object
-                -   PS2Memory::ReadLong<Vector3>(address)
+            Example Usage: Get Vec3 Position of Object
+                -   PS2Memory::ReadLong<Vec3>(address)
         */
         template<typename T>
         static inline T                 ReadLong(__int64 addr) { return *(T*)(addr); }
@@ -498,8 +639,8 @@ namespace PlayStation2
             Example Usage: Write new float Position of Object
                 -   PS2Memory::WriteLong<float>(offset, patch);
 
-            Example Usage: Write new Vector3 Position of Object
-                -   PS2Memory::WriteLong<Vector3>(offset, patch)
+            Example Usage: Write new Vec3 Position of Object
+                -   PS2Memory::WriteLong<Vec3>(offset, patch)
         */
         template<typename T>
         static inline void              WriteLong(__int64 addr, T Patch) { *(T*)addr = Patch; }
@@ -512,8 +653,8 @@ namespace PlayStation2
             Example Usage: Get float Position of Object
                 -   PS2Memory::ReadShort<float>(offset);
 
-            Example Usage: Get Vector3 Position of Object
-                -   PS2Memory::ReadShort<Vector3>(offset)
+            Example Usage: Get Vec3 Position of Object
+                -   PS2Memory::ReadShort<Vec3>(offset)
         */
         template <typename T>
         static inline T                 ReadShort(__int32 offset)  { return ReadLong<T>(GetAddr(offset)); }
@@ -526,8 +667,8 @@ namespace PlayStation2
             Example Usage: write new float Position of Object
                 -   PS2Memory::WriteShort<float>(offset, patch);
 
-            Example Usage: Write new Vector3 Position of Object
-                -   PS2Memory::WriteShort<Vector3>(offset, patch)
+            Example Usage: Write new Vec3 Position of Object
+                -   PS2Memory::WriteShort<Vec3>(offset, patch)
         */
         template <typename T>
         static inline void              WriteShort(__int32 offset, T patch) { WriteLong<T>(GetAddr(offset), patch); }
@@ -590,7 +731,8 @@ namespace PlayStation2
 
         class Math3D
         {
-            static float GetDistanceTo3DObject(Vector3 POS, Vector3 POS2);
+		public:
+            static float GetDistanceTo3DObject(Vec3 POS, Vec3 POS2);
         };
 
     };

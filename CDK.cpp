@@ -1,5 +1,5 @@
 #pragma once
-#include <CDK.h>
+#include "CDK.h"
 
 /**
  * Name: PlayStation2 - PCSX2
@@ -270,7 +270,7 @@ namespace PlayStation2
         pInfo.m_ModulePath      = std::string(szModulePath, lstrlenA(szModulePath));
         pInfo.m_WindowWidth     = nWidth;
         pInfo.m_WindowHeight    = nHeight;
-        pInfo.m_WindowSize      = Vector2((float)nWidth, (float)nHeight);
+        pInfo.m_WindowSize      = Vec2((float)nWidth, (float)nHeight);
         return TRUE;
     }
 
@@ -526,7 +526,7 @@ namespace PlayStation2
     //	[TOOL]
     //	Gets distance from Position A to Position B
     // <returns>Vector3</returns>
-    float Tools::Math3D::GetDistanceTo3DObject(Vector3 POS, Vector3 POS2)
+    float Tools::Math3D::GetDistanceTo3DObject(Vec3 POS, Vec3 POS2)
     {
         float x = (POS2.x - POS.x);
         float y = (POS2.y - POS.y);
@@ -549,20 +549,20 @@ namespace PlayStation2
     //  Class Offsets
     //  EmuThread*                  PCSX2::g_emu_thread;        //  NOT USED FOR NOW
     //  GSRenderer*                 PCSX2::g_gs_renderer;       //  NOT USED FOR NOW
-    unsigned int                    PCSX2::o_gs_device{ 0x3FA2728 };
+    unsigned int                    PCSX2::o_gs_device{ 0x0 };
     GSDevice*                       PCSX2::g_gs_device;
     unsigned int                    PCSX2::o_GSUpdateDisplayWindow;
     unsigned int                    PCSX2::o_GSDevice_GetRenderAPI;
-    unsigned int                    PCSX2::o_psxRecompileInstruction{ 0x269D80 };
-    unsigned int                    PCSX2::o_recompileNextInstruction{ 0x291CA0 };
-    unsigned int                    PCSX2::o_recResetEE{ 0x2942C0 };
+    unsigned int                    PCSX2::o_psxRecompileInstruction{ 0x0 };
+    unsigned int                    PCSX2::o_recompileNextInstruction{ 0x0 };
+    unsigned int                    PCSX2::o_recResetEE{ 0x0 };
     cpuRegisters*                   PCSX2::g_cpuRegs;
     __int32                         PCSX2::g_cpupc{ 0x0 };
-    unsigned int                    PCSX2::o_cpuRegs{ 0x2EA8F2C };
+    unsigned int                    PCSX2::o_cpuRegs{ 0x0 };
     psxRegisters*                   PCSX2::g_psxRegs;
     __int32                         PCSX2::g_psxpc{ 0x0 };
-    unsigned int                    PCSX2::o_psxRegs{ 0x2EA809C };
-    unsigned int                    PCSX2::g_discordPresemt{ 0xE9090 };
+    unsigned int                    PCSX2::o_psxRegs{ 0x0 };
+    unsigned int                    PCSX2::g_discordPresemt{ 0x0 };
     PCSX2::IDXGISwapChainPresent    PCSX2::oDXGISwapChainPresent;   //  value automatically handled
     PCSX2::ResizeBuffers            PCSX2::oIDXGIResizeBuffers;   //  value automatically handled
     ID3D11RenderTargetView*         PCSX2::D11RenderTarget;         //  value automatically handled
@@ -576,14 +576,14 @@ namespace PlayStation2
     bool                            PCSX2::isMenuShown;
 
     ///  PCSX2 IConsoleWriter
-    PCSX2::IConsoleWriter_WriteLn_stub PCSX2::WriteLn               = reinterpret_cast<PCSX2::IConsoleWriter_WriteLn_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 31 D2 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC CC CC CC 48 83 EC"));
-    PCSX2::IConsoleWriter_cWriteLn_stub PCSX2::WriteColorLn         = reinterpret_cast<PCSX2::IConsoleWriter_cWriteLn_stub>(Memory::SignatureScan("48 83 EC ? 48 89 D0 89 CA 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 48 83 EC"));
-    PCSX2::IConsoleWriter_Warning_stub PCSX2::WriteWarning          = reinterpret_cast<PCSX2::IConsoleWriter_Warning_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 56 57"));
-    PCSX2::IConsoleWriter_Error_stub PCSX2::WriteError              = reinterpret_cast<PCSX2::IConsoleWriter_Warning_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 41 57 41 56 41 55"));
-    PCSX2::IConsoleWriterDev_WriteLn_stub PCSX2::DevWriteLn         = reinterpret_cast<PCSX2::IConsoleWriterDev_WriteLn_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 31 D2 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC CC CC CC 41 57"));
-    PCSX2::IConsoleWriterDev_cWriteLn_stub PCSX2::DevColorWriteLn   = reinterpret_cast<PCSX2::IConsoleWriterDev_cWriteLn_stub>(Memory::SignatureScan("48 83 EC ? 48 89 D0 89 CA 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 56"));
-    PCSX2::IConsoleWriterDev_Warning_stub PCSX2::DevWriteWarning    = reinterpret_cast<PCSX2::IConsoleWriterDev_Warning_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 56 48 81 EC"));
-    PCSX2::IConsoleWriterDev_Error_stub PCSX2::DevWriteError        = reinterpret_cast<PCSX2::IConsoleWriterDev_Error_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 41 57 41 56 56"));
+    PCSX2::IConsoleWriter_WriteLn_stub PCSX2::WriteLn               = {nullptr}; // reinterpret_cast<PCSX2::IConsoleWriter_WriteLn_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 31 D2 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC CC CC CC 48 83 EC"));
+    PCSX2::IConsoleWriter_cWriteLn_stub PCSX2::WriteColorLn         = {nullptr}; // reinterpret_cast<PCSX2::IConsoleWriter_cWriteLn_stub>(Memory::SignatureScan("48 83 EC ? 48 89 D0 89 CA 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 48 83 EC"));
+    PCSX2::IConsoleWriter_Warning_stub PCSX2::WriteWarning          = {nullptr}; // reinterpret_cast<PCSX2::IConsoleWriter_Warning_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 56 57"));
+    PCSX2::IConsoleWriter_Error_stub PCSX2::WriteError              = {nullptr}; // reinterpret_cast<PCSX2::IConsoleWriter_Warning_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 41 57 41 56 41 55"));
+    PCSX2::IConsoleWriterDev_WriteLn_stub PCSX2::DevWriteLn         = {nullptr}; // reinterpret_cast<PCSX2::IConsoleWriterDev_WriteLn_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 31 D2 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC CC CC CC 41 57"));
+    PCSX2::IConsoleWriterDev_cWriteLn_stub PCSX2::DevColorWriteLn   = {nullptr}; // reinterpret_cast<PCSX2::IConsoleWriterDev_cWriteLn_stub>(Memory::SignatureScan("48 83 EC ? 48 89 D0 89 CA 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 56"));
+    PCSX2::IConsoleWriterDev_Warning_stub PCSX2::DevWriteWarning    = {nullptr}; // reinterpret_cast<PCSX2::IConsoleWriterDev_Warning_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 56 48 81 EC"));
+    PCSX2::IConsoleWriterDev_Error_stub PCSX2::DevWriteError        = {nullptr}; // reinterpret_cast<PCSX2::IConsoleWriterDev_Error_stub>(Memory::SignatureScan("48 83 EC ? 48 89 C8 48 89 54 24 ? 4C 89 44 24 ? 4C 89 4C 24 ? 4C 8D 4C 24 ? 4C 89 4C 24 ? B9 ? ? ? ? BA ? ? ? ? 49 89 C0 E8 ? ? ? ? 90 48 83 C4 ? C3 CC CC CC CC CC CC CC CC 41 57 41 56 56"));
     
     
     //-----------------------------------------------------------------------------------
