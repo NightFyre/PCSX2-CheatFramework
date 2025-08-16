@@ -20,29 +20,14 @@ This framework provides tools to port older codes to a more modern approach, usi
 2. Initialize the Cheat Device
 https://github.com/NightFyre/PCSX2-CheatFramework/blob/4bccdd509105c2238ac33f16fbafd11f3883dc44/CDK.h#L73-L74
 
-3. Do Stuff
+3. make cheats
 https://github.com/NightFyre/PlayStation2-Game-SDKs/blob/f68b2654d8112d883a7441be9a5000230cc55f15/SOCOM%20U.S%20Navy%20Seals/SOCOM1_package.cpp#L120-L137
 
-4. (optional) include game package for additional controls
+4. include game package for additional controls
 https://github.com/NightFyre/PCSX2-CheatFramework/blob/f7469873e8787f6efe29a19cdc813ef3f7f1e913/examples/GamePackage/dllmain.cpp#L3
 
 ## USAGE EXAMPLES
-
-- Access EE Virtual Memory
-https://github.com/NightFyre/PCSX2-CheatFramework/blob/b2ae5a44d7c1452256920c4af81f745cdf0df2f3/examples/GameMemory/dllmain.cpp#L33-L34
-
-- Get PS2 EE Virtual Address
-https://github.com/NightFyre/PCSX2-CheatFramework/blob/b2ae5a44d7c1452256920c4af81f745cdf0df2f3/examples/GameMemory/dllmain.cpp#L37-L38
-
-- Read PS2 EE Virtual Memory
-https://github.com/NightFyre/PCSX2-CheatFramework/blob/b2ae5a44d7c1452256920c4af81f745cdf0df2f3/examples/GameMemory/dllmain.cpp#L41-L47
-
-- Access Class Members via GamePackages 
-https://github.com/NightFyre/PCSX2-CheatFramework/blob/f7469873e8787f6efe29a19cdc813ef3f7f1e913/examples/GamePackage/dllmain.cpp#L31
-
-- Hook Rendering API
-https://github.com/NightFyre/PCSX2-CheatFramework/blob/7690e62042b37c8a7c7465d42dcc35cfbc678c7d/examples/Rendering/dllmain.cpp#L42-L50
-
+For all examples please check the `examples` branch.
 
 ### References & Credits
 - [PCSX2](https://github.com/PCSX2/pcsx2)
