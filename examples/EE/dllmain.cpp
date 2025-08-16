@@ -3,7 +3,7 @@
 
 static bool g_running;
 
-#define fn_start 0x0             //  should be function start address 
+#define fn_start 0x5AB5F0             //  should be function start address 
 
 //---------------------------------------------------------------------------------------------------
 //  Initialize Client Thread
