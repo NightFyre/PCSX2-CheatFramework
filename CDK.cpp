@@ -416,6 +416,9 @@ namespace PlayStation2
     __int64 PS2Memory::GetModuleBase() { return Memory::BasePS2MemorySpace; }
 
     ///---------------------------------------------------------------------------------------------------
+    __int64 PS2Memory::GetScratchPadBase() { return Memory::BasePS2MemorySpace + offsetof(EEVirtualMemory, EEVirtualMemory::Scratch); }
+
+    ///---------------------------------------------------------------------------------------------------
     //	[MEMORY]
     // Converts shortened RAW PS2 format address to x64 address
     // EXAMPLE:
