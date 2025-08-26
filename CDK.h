@@ -1,9 +1,10 @@
 // -------------------------------------------------------------- \\
 //						PCSX2 CHEAT DEVICE						  \\
 // -------------------------------------------------------------- \\
-// Name: PlayStation2 - PCSX2, Version: 1.0.0
-#define CDK_VERSION		"v1.0.0"			//	? ? ? 
-#define PCSX2_VERSION	"v1.5617"			//	all static offsets are set in accordance to the module version noted here
+// Name: PlayStation2 - PCSX2, Version: 1.0.1
+#define CDK_VERSION				"v1.0.1"		//	? ? ? 
+#define TARGET_PCSX2_VERSION	"v1.5617"		//	all static offsets are set in accordance to the module version noted here
+#define LASTEST_PCS2_VERSION 	"v2.4.0"		//	Latest PCSX2 version
 
 #define DEARIMGUI		false				//	
 #define DEARIMGUI_MATH	false				//	
@@ -23,6 +24,7 @@
 
 #pragma once
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+#define _USE_MATH_DEFINES
 #include <windows.h>
 #include <iostream>
 #include <fstream>
@@ -41,14 +43,15 @@
 #pragma comment(lib, "XInput.lib")
 
 //	RENDERING APIS
-#if DEARIMGUI
 #include <d3d11.h>
 #pragma comment(lib, "d3d11.lib")
 #include <d3d12.h>
 #pragma comment(lib, "d3d12.lib")
 #include <dxgi1_4.h>
 
-#if DEARIMGUI_MATH
+#if DEARIMGUI
+
+#ifdef DEARIMGUI_MATH
 #define IMGUI_DEFINE_MATH_OPERATORS
 #endif
 
@@ -488,6 +491,17 @@ namespace PlayStation2
 		DEFAULT = white,
 	};
 
+	struct EEVirtualMemory 
+	{
+		/* https://github.com/PCSX2/pcsx2/blob/47931a06890ae7ee70f7e3019ad1bdcba8a07c32/pcsx2/MemoryTypes.h#L32-L48 */
+		unsigned __int8 Main[(1024 * 1024) * 32];	// 32MB
+		unsigned __int8 Extra[(1024 * 1024) * 96];	// 96MB
+		unsigned __int8 Scratch[(1024 * 1) * 16];	// 16KB
+		unsigned __int8 ROM[(1024 * 1024) * 4];     // Boot rom (4MB)
+		unsigned __int8 ROM1[(1024 * 1024) * 4];    // DVD player (4MB)
+		unsigned __int8 ROM2[(1024 * 1024) * 4];	// Chinese extensions
+	};
+
 #pragma endregion
 
 	//----------------------------------------------------------------------------------------------------
@@ -688,11 +702,12 @@ namespace PlayStation2
         }
 
 
-    public:
+    public:	//	EE
         static __int64                  GetModuleBase();                    //  obtain PS2 EE memory base address. 00007FF6C0000000 
+		static __int64 					GetScratchPadBase();				//  obtain PS2 EE scratchpad memory base address. 
         static __int64                  GetAddr(__int32 offset);            //  transform offset to physical address. 0x44D648 -> 00007FF6C44D648      
         static __int64                  ResolvePtrChain(__int32 base_offset, std::vector<__int32> offsets);
-    };
+	};
 
     class Tools
     {
