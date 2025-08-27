@@ -196,7 +196,7 @@ namespace PlayStation2
     __int64                     Memory::dwGameBase;
     __int64                     Memory::dwEEMem;
     __int64                     Memory::BasePS2MemorySpace;
-    ProcessInfo                 Memory::Process;                                        
+    Memory::ProcessInfo         Memory::Process;                                        
     bool                        Memory::m_isInitialized;                
     Memory*                     Memory::m_instance = new Memory();
 
