@@ -33,7 +33,7 @@ namespace PlayStation2
             Console::SetViewState(true);
             Console::LogMsg("[+] PCSX2 Cheat Device Initialized!\n- PCSX2:\t0x%llX\n- PS2:\t\t0x%llX\n\n",
                 (__int64)pHand,
-                PS2Memory::GetModuleBase()
+                PS2Memory::GetEEBase()
             );
         }
 
@@ -413,7 +413,7 @@ namespace PlayStation2
 #pragma region  //  PS2Memory
 
     ///---------------------------------------------------------------------------------------------------
-    __int64 PS2Memory::GetModuleBase() { return Memory::BasePS2MemorySpace; }
+    __int64 PS2Memory::GetEEBase() { return Memory::BasePS2MemorySpace; }
 
     ///---------------------------------------------------------------------------------------------------
     __int64 PS2Memory::GetScratchPadBase() { return Memory::BasePS2MemorySpace + offsetof(EEVirtualMemory, EEVirtualMemory::Scratch); }
@@ -426,7 +426,12 @@ namespace PlayStation2
     // - Shortened RAW : 0x123456
     // - Base Memory   : 7FF660000000
     // - Result        : 7FF660000000 + 0x123456 = 7FF660123456
-    __int64 PS2Memory::GetAddr(__int32 offset) { return Memory::BasePS2MemorySpace + offset; }
+    __int64 PS2Memory::GetEEAddr(__int32 offset) { return GetEEBase() + offset; }
+
+	///---------------------------------------------------------------------------------------------------
+    //  [MEMORY]
+	//  Converts shortened RAW PS2 format scratchpad address to x64 address
+	__int64 PS2Memory::GetScratchAddr(__int32 offset) { return GetScratchPadBase() + offset; }
 
     ///---------------------------------------------------------------------------------------------------
     //	[MEMORY]
@@ -435,7 +440,7 @@ namespace PlayStation2
     __int64 PS2Memory::ResolvePtrChain(__int32 RAW_PS2_OFFSET, std::vector<__int32> offsets)
     {
         //  --
-        uintptr_t addr = (*(int32_t*)GetAddr(RAW_PS2_OFFSET)) + Memory::BasePS2MemorySpace;
+        uintptr_t addr = (*(int32_t*)GetEEAddr(RAW_PS2_OFFSET)) + Memory::BasePS2MemorySpace;
         if (offsets.empty())
             return addr;
 

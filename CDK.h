@@ -696,13 +696,13 @@ namespace PlayStation2
         /*
             Summary: takes an input long address and writes a new value
             Notes:
-                -   'short' in this sense would be the game offset such as'0x4899F0'
+                -   'long' in this sense would be the physical address in memory such as '00007FF6C194DC00'
 
             Example Usage: Write new float Position of Object
-                -   PS2Memory::WriteLong<float>(offset, patch);
+                -   PS2Memory::WriteLong<float>(address, patch);
 
             Example Usage: Write new Vec3 Position of Object
-                -   PS2Memory::WriteLong<Vec3>(offset, patch)
+                -   PS2Memory::WriteLong<Vec3>(address, patch)
         */
         template<typename T>
         static inline void              WriteLong(__int64 addr, T Patch) { *(T*)addr = Patch; }
@@ -719,7 +719,7 @@ namespace PlayStation2
                 -   PS2Memory::ReadShort<Vec3>(offset)
         */
         template <typename T>
-        static inline T                 ReadShort(__int32 offset)  { return ReadLong<T>(GetAddr(offset)); }
+        static inline T                 ReadEE(__int32 offset)  { return ReadLong<T>(GetEEAddr(offset)); }
 
         /*
             Summary: takes an input short offset , transforms it to an address in memory and writes a new value
@@ -733,27 +733,34 @@ namespace PlayStation2
                 -   PS2Memory::WriteShort<Vec3>(offset, patch)
         */
         template <typename T>
-        static inline void              WriteShort(__int32 offset, T patch) { WriteLong<T>(GetAddr(offset), patch); }
+        static inline void              WriteEE(__int32 offset, T patch) { WriteLong<T>(GetEEAddr(offset), patch); }
+
+		template <typename T>
+		static inline void              ReadScratch(__int32 offset) { return ReadLong<T>(GetScratchAddr(offset)); }
+
+		template <typename T>
+		static inline void              WriteScratch(__int32 offset, T patch) { WriteLong<T>(GetScratchAddr(offset), patch); }
 
         //  takes an input long address , reads the value and casts it to a class pointer
         template <typename T>
-        static inline T                GetPtrLong(long long address)
+        static inline T					GetPtrLong(long long address)
         {
-            return reinterpret_cast<T>(GetModuleBase() + ReadLong<__int32>(address));
+            return reinterpret_cast<T>(GetEEBase() + ReadLong<__int32>(address));
         }
 
         //  takes an input short offset , transforms it to an address in memory, reads its value and casts it to a class pointer 
         template <typename T>
-        static inline T                GetPtrShort(__int32 offset)
+        static inline T					GetPtrShort(__int32 offset)
         {
-            return reinterpret_cast<T>(GetModuleBase() + ReadShort<__int32>(offset));
+            return reinterpret_cast<T>(GetEEBase() + ReadShort<__int32>(offset));
         }
 
 
     public:	//	EE
-        static __int64                  GetModuleBase();                    //  obtain PS2 EE memory base address. 00007FF6C0000000 
-		static __int64 					GetScratchPadBase();				//  obtain PS2 EE scratchpad memory base address. 
-        static __int64                  GetAddr(__int32 offset);            //  transform offset to physical address. 0x44D648 -> 00007FF6C44D648      
+        static __int64                  GetEEBase();						//  obtain PS2 EE memory base address. example: 00007FF6C0000000 
+		static __int64 					GetScratchPadBase();				//  obtain PS2 EE scratchpad memory base address. example: 00007FF6C8000000 
+        static __int64                  GetEEAddr(__int32 offset);          //  transform offset to virtual address. 0x44D648 -> 00007FF6C44D648      
+		static __int64					GetScratchAddr(__int32 offset);		//  transform scratchpad offset to virtual address. 0x1F00 -> 00007FF6C801F00
         static __int64                  ResolvePtrChain(__int32 base_offset, std::vector<__int32> offsets);
 	};
 
