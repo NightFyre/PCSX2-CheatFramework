@@ -94,6 +94,30 @@ namespace PlayStation2
 	//									[SECTION] CORE STRUCTS & ENUMS
 	//-----------------------------------------------------------------------------------
 
+#pragma region	// CORE ENUMS
+
+	enum EConsoleColors : int
+	{
+		dark_blue = 1,
+		dark_green,
+		dark_teal,
+		dark_red,
+		dark_pink,
+		dark_yellow,
+		dark_white,
+		dark_gray,
+		blue,
+		green,
+		teal,
+		red,
+		pink,
+		yellow,
+		white,
+		DEFAULT = white,
+	};
+
+#pragma endregion
+
 #pragma region	//	CORE STRUCTS
 
 	struct Vec2
@@ -381,33 +405,84 @@ namespace PlayStation2
 
 	struct Mat4x4
 	{
-		Vec4 r[4];
+		float m[4][4];
 
-		Vec4 operator*(const Vec4& other) const
+		Mat4x4()
 		{
-			return Vec4(
-				r[0].x * other.x + r[1].x * other.y + r[2].x * other.z + r[3].x * other.w,
-				r[0].y * other.x + r[1].y * other.y + r[2].y * other.z + r[3].y * other.w,
-				r[0].z * other.x + r[1].z * other.y + r[2].z * other.z + r[3].z * other.w,
-				r[0].w * other.x + r[1].w * other.y + r[2].w * other.z + r[3].w * other.w
-			);
-		};
+			// identity
+			for (int i = 0; i < 4; i++)
+				for (int j = 0; j < 4; j++)
+					m[i][j] = (i == j) ? 1.0f : 0.0f;
+		}
 
-		Mat4x4 operator*(const Mat4x4& other) const
+		Mat4x4(const float values[16])
+		{
+			for (int i = 0; i < 4; i++)
+				for (int j = 0; j < 4; j++)
+					m[i][j] = values[i * 4 + j];
+		}
+
+		static Mat4x4 Identity()
+		{
+			return Mat4x4();
+		}
+
+		Vec3 GetRow(int row) const { return Vec3(m[row][0], m[row][1], m[row][2]); }
+		Vec3 Translation() const { return Vec3(m[3][0], m[3][1], m[3][2]); }
+
+		float& operator()(int row, int col) { return m[row][col]; }
+		const float& operator()(int row, int col) const { return m[row][col]; }
+
+		// Matrix * Vec4
+		Vec4 operator*(const Vec4& v) const
+		{
+			/* column major */
+			//	return Vec4(
+			//		m[0][0] * v.x + m[0][1] * v.y + m[0][2] * v.z + m[0][3] * v.w,
+			//		m[1][0] * v.x + m[1][1] * v.y + m[1][2] * v.z + m[1][3] * v.w,
+			//		m[2][0] * v.x + m[2][1] * v.y + m[2][2] * v.z + m[2][3] * v.w,
+			//		m[3][0] * v.x + m[3][1] * v.y + m[3][2] * v.z + m[3][3] * v.w
+			//	);
+
+			/* row major */
+			return Vec4(
+				m[0][0] * v.x + m[1][0] * v.y + m[2][0] * v.z + m[3][0] * v.w,
+				m[0][1] * v.x + m[1][1] * v.y + m[2][1] * v.z + m[3][1] * v.w,
+				m[0][2] * v.x + m[1][2] * v.y + m[2][2] * v.z + m[3][2] * v.w,
+				m[0][3] * v.x + m[1][3] * v.y + m[2][3] * v.z + m[3][3] * v.w
+			);
+		}
+
+
+		// Matrix * Matrix
+		Mat4x4 operator*(const Mat4x4& rhs) const
 		{
 			Mat4x4 result;
 
-			for (int i = 0; i < 4; ++i)
+			for (int i = 0; i < 4; i++)
 			{
-				result.r[i].x = r[i].x * other.r[0].x + r[i].y * other.r[1].x + r[i].z * other.r[2].x + r[i].w * other.r[3].x;
-				result.r[i].y = r[i].x * other.r[0].y + r[i].y * other.r[1].y + r[i].z * other.r[2].y + r[i].w * other.r[3].y;
-				result.r[i].z = r[i].x * other.r[0].z + r[i].y * other.r[1].z + r[i].z * other.r[2].z + r[i].w * other.r[3].z;
-				result.r[i].w = r[i].x * other.r[0].w + r[i].y * other.r[1].w + r[i].z * other.r[2].w + r[i].w * other.r[3].w;
+				for (int j = 0; j < 4; j++)
+				{
+					float sum = 0.0f;
+					for (int k = 0; k < 4; k++)
+						sum += m[i][k] * rhs.m[k][j];
+					result.m[i][j] = sum;
+				}
 			}
 
 			return result;
 		}
 	};
+
+	/* @TODO: what the f--- */
+	inline Vec4 operator*(const Vec4& v, const Mat4x4& m) {
+		return Vec4(
+			v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[2][0] + v.w * m.m[3][0],
+			v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[2][1] + v.w * m.m[3][1],
+			v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2] + v.w * m.m[3][2],
+			v.x * m.m[0][3] + v.y * m.m[1][3] + v.z * m.m[2][3] + v.w * m.m[3][3]
+		);
+	}
 
 	struct AABB
 	{
@@ -438,7 +513,7 @@ namespace PlayStation2
 		Vec3 GetCenter() const { return (m_min + m_max) * 0.5f; }
 		Vec3 GetSize() const { return m_max - m_min; }
 
-		bool GetBoxVerts()
+		bool GetBoxVerts(Vec3* box[])
 		{
 			Vec3 boxVerts[8] =
 			{
@@ -452,54 +527,10 @@ namespace PlayStation2
 				{ m_min.x, m_max.y, m_max.z },	//	vert7	//	    0--------------3
 			};
 
-			return false;
+			*box = boxVerts;
+
+			return true;
 		}
-	};
-
-	struct ProcessInfo
-	{
-		DWORD			m_ModulePID{};
-		HANDLE			m_ModuleHandle{};
-		uintptr_t		m_ModuleBase{};
-
-		HWND			m_GameWindow{};
-		std::string		m_WindowTitle;
-		std::string		m_ClassName;
-		std::string		m_ModulePath;
-		int				m_WindowWidth;
-		int				m_WindowHeight;
-		Vec2			m_WindowSize{};
-	};
-
-	enum EConsoleColors : int 
-	{
-		dark_blue = 1,
-		dark_green,
-		dark_teal,
-		dark_red,
-		dark_pink,
-		dark_yellow,
-		dark_white,
-		dark_gray,
-		blue,
-		green,
-		teal,
-		red,
-		pink,
-		yellow,
-		white,
-		DEFAULT = white,
-	};
-
-	struct EEVirtualMemory 
-	{
-		/* https://github.com/PCSX2/pcsx2/blob/47931a06890ae7ee70f7e3019ad1bdcba8a07c32/pcsx2/MemoryTypes.h#L32-L48 */
-		unsigned __int8 Main[(1024 * 1024) * 32];	// 32MB
-		unsigned __int8 Extra[(1024 * 1024) * 96];	// 96MB
-		unsigned __int8 Scratch[(1024 * 1) * 16];	// 16KB
-		unsigned __int8 ROM[(1024 * 1024) * 4];     // Boot rom (4MB)
-		unsigned __int8 ROM1[(1024 * 1024) * 4];    // DVD player (4MB)
-		unsigned __int8 ROM2[(1024 * 1024) * 4];	// Chinese extensions
 	};
 
 #pragma endregion
@@ -554,8 +585,25 @@ namespace PlayStation2
         static Console*                 m_instance;                     //  static class instance
     };
 
+	/* internal memory class , not for external use */
     class Memory
     {
+    public:
+		struct ProcessInfo
+		{
+			DWORD			m_ModulePID{0};
+			HANDLE			m_ModuleHandle{0};
+			uintptr_t		m_ModuleBase{0};
+
+			HWND			m_GameWindow{0};
+			std::string		m_WindowTitle;
+			std::string		m_ClassName;
+			std::string		m_ModulePath;
+			int				m_WindowWidth{ 0 };
+			int				m_WindowHeight{ 0 };
+			Vec2			m_WindowSize{ 0, 0 };
+		}; typedef ProcessInfo pInfo64;
+
     public:
 		template <typename T>
 		static inline T                 ReadMemoryEx(__int64 addr) { return *(T*)addr; }
@@ -603,19 +651,20 @@ namespace PlayStation2
         static __int64                  GetModuleBase();                            //  returns the module base of PCSX2 Process
         static __int64                  GetAddr(unsigned int offset);               //  returns address offset from PCSX2 module base
         static bool                     ObtainProcessInfo(ProcessInfo& pInfo);      //  resolves information on a windows process ( PID, Handle, BaseAddr & Base Game Window Information )
-        static __int64                  ResolvePtrChain(__int64 addr, std::vector<unsigned int> offsets = {});
-        static bool                     BytePatch(__int64 Address, BYTE* bytes, unsigned int size);
-        static bool                     NopBytes(__int64 Address, unsigned int size);
-		static unsigned int				GetVtblOffset(void* czInstance, const char* dwModule = NULL);
-		static int						GetVtblIndex(void* fncPtr, void* vTblAddr);
-		static __int64					SignatureScan(const char* sig);
-		static std::vector<int>			SignatureToBytes(const char* sig);
+		static __int64                  ResolvePtrChain(__int64 addr, std::vector<unsigned int> offsets = {}); //  resolves a pointer chain to a final address
+		static bool                     BytePatch(__int64 Address, BYTE* bytes, unsigned int size);		//	Patch a section of memory with size bytes from the bytes array
+		static bool                     NopBytes(__int64 Address, unsigned int size);					//	NOP a section of memory with size bytes
+		static unsigned int				GetVtblOffset(void* czInstance, const char* dwModule = NULL);	//	returns the offset of a function inside a vtable
+		static int						GetVtblIndex(void* fncPtr, void* vTblAddr);	//	 returns the index of a function inside a vtable
+		static __int64					SignatureScan(const char* sig, const char* dwModule = NULL); //  Scans a specific module for a given signature and returns the address
+		static __int64                  PatternScanEx(const char* sig, const __int64& scanAddr, const DWORD& szScanRange); //  Scans a specific memory range for a given signature and returns the address
+		static std::vector<int>			SignatureToBytes(const char* sig);			//	 Converts a signature string into a vector of bytes and wildcards
 
     public:
         Memory();
         ~Memory();
         
-        friend class PS2Memory;
+		friend class PS2Memory;	// allow access to private members from PS2Memory class
     
     private:
         static bool                     m_isInitialized;                                //  Set on first constructor call
@@ -648,13 +697,13 @@ namespace PlayStation2
         /*
             Summary: takes an input long address and writes a new value
             Notes:
-                -   'short' in this sense would be the game offset such as'0x4899F0'
+                -   'long' in this sense would be the physical address in memory such as '00007FF6C194DC00'
 
             Example Usage: Write new float Position of Object
-                -   PS2Memory::WriteLong<float>(offset, patch);
+                -   PS2Memory::WriteLong<float>(address, patch);
 
             Example Usage: Write new Vec3 Position of Object
-                -   PS2Memory::WriteLong<Vec3>(offset, patch)
+                -   PS2Memory::WriteLong<Vec3>(address, patch)
         */
         template<typename T>
         static inline void              WriteLong(__int64 addr, T Patch) { *(T*)addr = Patch; }
@@ -671,7 +720,7 @@ namespace PlayStation2
                 -   PS2Memory::ReadShort<Vec3>(offset)
         */
         template <typename T>
-        static inline T                 ReadShort(__int32 offset)  { return ReadLong<T>(GetAddr(offset)); }
+        static inline T                 ReadEE(__int32 offset)  { return ReadLong<T>(GetEEAddr(offset)); }
 
         /*
             Summary: takes an input short offset , transforms it to an address in memory and writes a new value
@@ -685,30 +734,39 @@ namespace PlayStation2
                 -   PS2Memory::WriteShort<Vec3>(offset, patch)
         */
         template <typename T>
-        static inline void              WriteShort(__int32 offset, T patch) { WriteLong<T>(GetAddr(offset), patch); }
+        static inline void              WriteEE(__int32 offset, T patch) { WriteLong<T>(GetEEAddr(offset), patch); }
+
+		template <typename T>
+		static inline void              ReadScratch(__int32 offset) { return ReadLong<T>(GetScratchAddr(offset)); }
+
+		template <typename T>
+		static inline void              WriteScratch(__int32 offset, T patch) { WriteLong<T>(GetScratchAddr(offset), patch); }
 
         //  takes an input long address , reads the value and casts it to a class pointer
         template <typename T>
-        static inline T                GetPtrLong(long long address)
+        static inline T					GetPtrLong(long long address)
         {
-            return reinterpret_cast<T>(GetModuleBase() + ReadLong<__int32>(address));
+            return reinterpret_cast<T>(GetEEBase() + ReadLong<__int32>(address));
         }
 
         //  takes an input short offset , transforms it to an address in memory, reads its value and casts it to a class pointer 
         template <typename T>
-        static inline T                GetPtrShort(__int32 offset)
+        static inline T					GetPtrShort(__int32 offset)
         {
-            return reinterpret_cast<T>(GetModuleBase() + ReadShort<__int32>(offset));
+            return reinterpret_cast<T>(GetEEBase() + ReadEE<__int32>(offset));
         }
 
 
     public:	//	EE
-        static __int64                  GetModuleBase();                    //  obtain PS2 EE memory base address. 00007FF6C0000000 
-		static __int64 					GetScratchPadBase();				//  obtain PS2 EE scratchpad memory base address. 
-        static __int64                  GetAddr(__int32 offset);            //  transform offset to physical address. 0x44D648 -> 00007FF6C44D648      
-        static __int64                  ResolvePtrChain(__int32 base_offset, std::vector<__int32> offsets);
+        static __int64                  GetEEBase();						//  obtain PS2 EE memory base address. example: 00007FF6C0000000 
+		static __int64 					GetScratchPadBase();				//  obtain PS2 EE scratchpad memory base address. example: 00007FF6C8000000 
+        static __int64                  GetEEAddr(__int32 offset);          //  transform offset to virtual address. 0x44D648 -> 00007FF6C44D648      
+		static __int64					GetScratchAddr(__int32 offset);		//  transform scratchpad offset to virtual address. 0x1F00 -> 00007FF6C801F00
+		static __int64                  ResolvePtrChain(__int32 base_offset, std::vector<__int32> offsets); //  resolves a pointer chain to a final address
+		static __int64					FindExecCodeBlock(const DWORD& szDetour);	// Get executable space in EE memory ( finds the first space matching criteria , often not the best way of doing it )
 	};
 
+	/* helper methods */
     class Tools
     {
     public:
@@ -750,6 +808,10 @@ namespace PlayStation2
             static float GetDistanceTo3DObject(Vec3 POS, Vec3 POS2);
         };
 
+		class StringHelper
+		{
+
+		};
     };
 
 #pragma endregion
@@ -768,7 +830,6 @@ namespace PlayStation2
 	//-----------------------------------------------------------------------------------
 
 #pragma region	//	PCSX2 STRUCTS & ENUMS
-
 
 	/*
 	* PCSX2 Source
@@ -827,6 +888,48 @@ namespace PlayStation2
 		D3D12,
 		Vulkan,
 		OpenGL
+	};
+
+	/* https://github.com/PCSX2/pcsx2/blob/47931a06890ae7ee70f7e3019ad1bdcba8a07c32/pcsx2/MemoryTypes.h#L32-L48 */
+	namespace PS2MemSize
+	{
+		static const int MainRam = (1024 * 1024) * 32;	// 32MB
+		static const int ExtraRam = (1024 * 1024) * 96; // 96MB	// devkit
+		static const int TotalRam = MainRam + ExtraRam; // 128MB
+		static const int Rom = (1024 * 1024) * 4;		// 4MB
+		static const int Rom1 = (1024 * 1024) * 4;		// 4MB	// dvd player
+		static const int Rom2 = (1024 * 1024) * 4;		// 4MB	// chinese extensions
+
+		static const int IopRam = (1024 * 1024) * 2;	// 2MB
+		static const int IopHardware = 1 * 64;	// 64KB
+
+		static const int Scratch = 1 * 16; // 16KB
+
+		static const int Zero = (1024 * 1) * 1;		// 1MB
+	}
+	struct EEVirtualMemory
+	{
+		unsigned __int8 Main[PS2MemSize::MainRam];			// 32MB
+		unsigned __int8 Extra[PS2MemSize::ExtraRam];		// 96MB
+		unsigned __int8 Scratch[PS2MemSize::Scratch];		// 16KB
+		unsigned __int8 ROM[PS2MemSize::Rom];				// Boot rom (4MB)
+		unsigned __int8 ROM1[PS2MemSize::Rom1];				// DVD player (4MB)
+		unsigned __int8 ROM2[PS2MemSize::Rom2];				// Chinese extensions
+
+		// Two 1 megabyte (max DMA) buffers for reading and writing to high memory (>32MB).
+		// Such accesses are not documented as causing bus errors but as the memory does
+		// not exist, reads should continue to return 0 and writes should be discarded.
+		// Probably.
+		
+		unsigned __int8 ZeroRead[PS2MemSize::Zero];			// 1MB
+		unsigned __int8 ZeroWrite[PS2MemSize::Zero];		// 1MB	
+	};
+
+	struct IOPVirtualMemory
+	{
+		unsigned __int8 Main[PS2MemSize::IopRam];			// IOP Ram (2MB)
+		unsigned __int8 Hardware[PS2MemSize::IopHardware];	// IOP Hardware (64KB)
+		unsigned __int8 Sif[0x100];							// SIF Registers 
 	};
 
 	struct GPR_reg

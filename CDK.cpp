@@ -33,7 +33,7 @@ namespace PlayStation2
             Console::SetViewState(true);
             Console::LogMsg("[+] PCSX2 Cheat Device Initialized!\n- PCSX2:\t0x%llX\n- PS2:\t\t0x%llX\n\n",
                 (__int64)pHand,
-                PS2Memory::GetModuleBase()
+                PS2Memory::GetEEBase()
             );
         }
 
@@ -193,11 +193,11 @@ namespace PlayStation2
 
     //----------------------------------------------------------------------------------------------------
     //  STATICS
-    __int64                     Memory::dwGameBase;
-    __int64                     Memory::dwEEMem;
-    __int64                     Memory::BasePS2MemorySpace;
-    ProcessInfo                 Memory::Process;                                        
-    bool                        Memory::m_isInitialized;                
+    __int64                     Memory::dwGameBase{ 0 };
+    __int64                     Memory::dwEEMem{ 0 };
+    __int64                     Memory::BasePS2MemorySpace{ 0 };
+    Memory::ProcessInfo         Memory::Process{ };
+    bool                        Memory::m_isInitialized{ false };
     Memory*                     Memory::m_instance = new Memory();
 
     //----------------------------------------------------------------------------------------------------
@@ -336,27 +336,41 @@ namespace PlayStation2
     int Memory::GetVtblIndex(void* fncPtr, void* vTblAddr) { return (((__int64)fncPtr - (__int64)vTblAddr) / sizeof(void*)) - 1; }
 
     ///---------------------------------------------------------------------------------------------------
-    __int64 Memory::SignatureScan(const char* sig)
+    __int64 Memory::SignatureScan(const char* sig, const char* dwModule)
     {
+		// Default to main module base
+		__int64 dwModuleBase = dwGameBase;
+		
+        // is module specified? set it if so
+        if (dwModule)
+            dwModuleBase = reinterpret_cast<__int64>(GetModuleHandleA(dwModule));
+
         // Retrieve module headers
-        const auto dosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(dwGameBase);
-        const auto ntHeaders = reinterpret_cast<PIMAGE_NT_HEADERS>(dwGameBase + dosHeader->e_lfanew);
+		const auto dosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(dwModuleBase);
+		const auto ntHeaders = reinterpret_cast<PIMAGE_NT_HEADERS>(dwModuleBase + dosHeader->e_lfanew);
 
         // Calculate the size of the image
         const auto sizeOfImage = ntHeaders->OptionalHeader.SizeOfImage;
 
+		// Scan the entire specified module for the signature
+		return PatternScanEx(sig, dwModuleBase, sizeOfImage);
+    }
+    
+    ///---------------------------------------------------------------------------------------------------
+    __int64 Memory::PatternScanEx(const char* sig, const __int64& scanAddr, const DWORD& szScanRange)
+    {
         // Convert signature pattern to byte array
         auto patternBytes = SignatureToBytes(sig);
 
         // Get pointer to the start of the module
-        const auto scanBytes = reinterpret_cast<std::uint8_t*>(dwGameBase);
+        const auto scanBytes = reinterpret_cast<std::uint8_t*>(scanAddr);
 
         // Length of the pattern
         const auto patternSize = patternBytes.size();
         const auto patternData = patternBytes.data();
 
         // Loop through the module memory
-        for (uintptr_t i = 0; i < sizeOfImage - patternSize; ++i) 
+        for (uintptr_t i = 0; i < szScanRange - patternSize; ++i)
         {
             bool found = true;
             // Compare each byte of the module memory with the pattern
@@ -413,7 +427,7 @@ namespace PlayStation2
 #pragma region  //  PS2Memory
 
     ///---------------------------------------------------------------------------------------------------
-    __int64 PS2Memory::GetModuleBase() { return Memory::BasePS2MemorySpace; }
+    __int64 PS2Memory::GetEEBase() { return Memory::BasePS2MemorySpace; }
 
     ///---------------------------------------------------------------------------------------------------
     __int64 PS2Memory::GetScratchPadBase() { return Memory::BasePS2MemorySpace + offsetof(EEVirtualMemory, EEVirtualMemory::Scratch); }
@@ -426,7 +440,12 @@ namespace PlayStation2
     // - Shortened RAW : 0x123456
     // - Base Memory   : 7FF660000000
     // - Result        : 7FF660000000 + 0x123456 = 7FF660123456
-    __int64 PS2Memory::GetAddr(__int32 offset) { return Memory::BasePS2MemorySpace + offset; }
+    __int64 PS2Memory::GetEEAddr(__int32 offset) { return GetEEBase() + offset; }
+
+	///---------------------------------------------------------------------------------------------------
+    //  [MEMORY]
+	//  Converts shortened RAW PS2 format scratchpad address to x64 address
+	__int64 PS2Memory::GetScratchAddr(__int32 offset) { return GetScratchPadBase() + offset; }
 
     ///---------------------------------------------------------------------------------------------------
     //	[MEMORY]
@@ -435,7 +454,7 @@ namespace PlayStation2
     __int64 PS2Memory::ResolvePtrChain(__int32 RAW_PS2_OFFSET, std::vector<__int32> offsets)
     {
         //  --
-        uintptr_t addr = (*(int32_t*)GetAddr(RAW_PS2_OFFSET)) + Memory::BasePS2MemorySpace;
+        uintptr_t addr = (*(int32_t*)GetEEAddr(RAW_PS2_OFFSET)) + Memory::BasePS2MemorySpace;
         if (offsets.empty())
             return addr;
 
@@ -447,6 +466,34 @@ namespace PlayStation2
             addr += (offsets[i] + Memory::BasePS2MemorySpace);
         }
         return addr;
+    }
+
+    ///---------------------------------------------------------------------------------------------------
+    //	[MEMORY]
+	// Get executable space in EE memory ( finds the first space matching criteria , often not the best way of doing it )
+    __int64 PS2Memory::FindExecCodeBlock(const DWORD& szDetour)
+    {
+        // get ee memspace
+		const __int64 pMem = GetEEBase();
+		if (!pMem)
+			return 0;
+
+        // create pattern
+        std::string pattern;
+		for (DWORD i = 0; i < szDetour; i++)
+            pattern.append("00 ");
+
+        // remove trailing space
+        if (!pattern.empty() && pattern.back() == ' ')
+            pattern.pop_back();
+
+        // scan for free block of memory
+        const __int64 pBlock = Memory::PatternScanEx(pattern.c_str(), pMem, PS2MemSize::MainRam);
+        if (!pBlock)
+			return 0;   // no block found
+
+        // return virtual address
+        return pBlock;
     }
 
 #pragma endregion
