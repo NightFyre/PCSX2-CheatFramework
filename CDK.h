@@ -591,17 +591,17 @@ namespace PlayStation2
     public:
 		struct ProcessInfo
 		{
-			DWORD			m_ModulePID{};
-			HANDLE			m_ModuleHandle{};
-			uintptr_t		m_ModuleBase{};
+			DWORD			m_ModulePID{0};
+			HANDLE			m_ModuleHandle{0};
+			uintptr_t		m_ModuleBase{0};
 
-			HWND			m_GameWindow{};
+			HWND			m_GameWindow{0};
 			std::string		m_WindowTitle;
 			std::string		m_ClassName;
 			std::string		m_ModulePath;
-			int				m_WindowWidth;
-			int				m_WindowHeight;
-			Vec2			m_WindowSize{};
+			int				m_WindowWidth{ 0 };
+			int				m_WindowHeight{ 0 };
+			Vec2			m_WindowSize{ 0, 0 };
 		}; typedef ProcessInfo pInfo64;
 
     public:
@@ -656,7 +656,8 @@ namespace PlayStation2
 		static bool                     NopBytes(__int64 Address, unsigned int size);					//	NOP a section of memory with size bytes
 		static unsigned int				GetVtblOffset(void* czInstance, const char* dwModule = NULL);	//	returns the offset of a function inside a vtable
 		static int						GetVtblIndex(void* fncPtr, void* vTblAddr);	//	 returns the index of a function inside a vtable
-		static __int64					SignatureScan(const char* sig);				//	 Scans the process memory for a given signature and returns the address ( only scans the main module )
+		static __int64					SignatureScan(const char* sig, const char* dwModule = NULL); //  Scans a specific module for a given signature and returns the address
+		static __int64                  PatternScanEx(const char* sig, const __int64& scanAddr, const DWORD& szScanRange); //  Scans a specific memory range for a given signature and returns the address
 		static std::vector<int>			SignatureToBytes(const char* sig);			//	 Converts a signature string into a vector of bytes and wildcards
 
     public:
@@ -752,7 +753,7 @@ namespace PlayStation2
         template <typename T>
         static inline T					GetPtrShort(__int32 offset)
         {
-            return reinterpret_cast<T>(GetEEBase() + ReadShort<__int32>(offset));
+            return reinterpret_cast<T>(GetEEBase() + ReadEE<__int32>(offset));
         }
 
 
@@ -761,7 +762,8 @@ namespace PlayStation2
 		static __int64 					GetScratchPadBase();				//  obtain PS2 EE scratchpad memory base address. example: 00007FF6C8000000 
         static __int64                  GetEEAddr(__int32 offset);          //  transform offset to virtual address. 0x44D648 -> 00007FF6C44D648      
 		static __int64					GetScratchAddr(__int32 offset);		//  transform scratchpad offset to virtual address. 0x1F00 -> 00007FF6C801F00
-        static __int64                  ResolvePtrChain(__int32 base_offset, std::vector<__int32> offsets);
+		static __int64                  ResolvePtrChain(__int32 base_offset, std::vector<__int32> offsets); //  resolves a pointer chain to a final address
+		static __int64					FindExecCodeBlock(const DWORD& szDetour);	// Get executable space in EE memory ( finds the first space matching criteria , often not the best way of doing it )
 	};
 
 	/* helper methods */
@@ -888,16 +890,46 @@ namespace PlayStation2
 		OpenGL
 	};
 
+	/* https://github.com/PCSX2/pcsx2/blob/47931a06890ae7ee70f7e3019ad1bdcba8a07c32/pcsx2/MemoryTypes.h#L32-L48 */
+	namespace PS2MemSize
+	{
+		static const int MainRam = (1024 * 1024) * 32;	// 32MB
+		static const int ExtraRam = (1024 * 1024) * 96; // 96MB	// devkit
+		static const int TotalRam = MainRam + ExtraRam; // 128MB
+		static const int Rom = (1024 * 1024) * 4;		// 4MB
+		static const int Rom1 = (1024 * 1024) * 4;		// 4MB	// dvd player
+		static const int Rom2 = (1024 * 1024) * 4;		// 4MB	// chinese extensions
 
+		static const int IopRam = (1024 * 1024) * 2;	// 2MB
+		static const int IopHardware = 1 * 64;	// 64KB
+
+		static const int Scratch = 1 * 16; // 16KB
+
+		static const int Zero = (1024 * 1) * 1;		// 1MB
+	}
 	struct EEVirtualMemory
 	{
-		/* https://github.com/PCSX2/pcsx2/blob/47931a06890ae7ee70f7e3019ad1bdcba8a07c32/pcsx2/MemoryTypes.h#L32-L48 */
-		unsigned __int8 Main[(1024 * 1024) * 32];	// 32MB
-		unsigned __int8 Extra[(1024 * 1024) * 96];	// 96MB
-		unsigned __int8 Scratch[(1024 * 1) * 16];	// 16KB
-		unsigned __int8 ROM[(1024 * 1024) * 4];     // Boot rom (4MB)
-		unsigned __int8 ROM1[(1024 * 1024) * 4];    // DVD player (4MB)
-		unsigned __int8 ROM2[(1024 * 1024) * 4];	// Chinese extensions
+		unsigned __int8 Main[PS2MemSize::MainRam];			// 32MB
+		unsigned __int8 Extra[PS2MemSize::ExtraRam];		// 96MB
+		unsigned __int8 Scratch[PS2MemSize::Scratch];		// 16KB
+		unsigned __int8 ROM[PS2MemSize::Rom];				// Boot rom (4MB)
+		unsigned __int8 ROM1[PS2MemSize::Rom1];				// DVD player (4MB)
+		unsigned __int8 ROM2[PS2MemSize::Rom2];				// Chinese extensions
+
+		// Two 1 megabyte (max DMA) buffers for reading and writing to high memory (>32MB).
+		// Such accesses are not documented as causing bus errors but as the memory does
+		// not exist, reads should continue to return 0 and writes should be discarded.
+		// Probably.
+		
+		unsigned __int8 ZeroRead[PS2MemSize::Zero];			// 1MB
+		unsigned __int8 ZeroWrite[PS2MemSize::Zero];		// 1MB	
+	};
+
+	struct IOPVirtualMemory
+	{
+		unsigned __int8 Main[PS2MemSize::IopRam];			// IOP Ram (2MB)
+		unsigned __int8 Hardware[PS2MemSize::IopHardware];	// IOP Hardware (64KB)
+		unsigned __int8 Sif[0x100];							// SIF Registers 
 	};
 
 	struct GPR_reg
